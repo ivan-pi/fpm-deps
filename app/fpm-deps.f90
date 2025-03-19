@@ -128,7 +128,10 @@ block
     call new_tree(tree)
     !call tree%add(package%dependency(:),err)
     call tree%add(package%package_config_t,err)
-    if (allocated(err)) error stop "building dependency tree failed"
+    if (allocated(err)) then
+        write(error_unit,'(A)') err%message
+        error stop "building dependency tree failed"
+    end if
 
     !print *, "Number of dependencies", tree%ndep
     !print *, "Dependencies are stored in ", tree%dep_dir
@@ -232,17 +235,29 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
 
         integer :: i, j, k
 
+        character(len=*), parameter :: fmt_label_only = &
+            '(2X,"N",I0,"[ label = ",A,"]")'
+        character(len=*), parameter :: fmt_label_and_tooltip = &
+            '(2X,"N",I0,"[ label =",A,",tooltip =",A,"]")'
+
+
         associate(n_nodes => size(tree%dep), dep => tree%dep)
 
         ! Preamble
         write(unit,'(A)') "strict digraph "//name//" {"
-        write(unit,'(2X,A)') 'fontname = "Helvetica,Arial,sans-serif"'
+        write(unit,'(2X,A)') 'node [fontname = "Helvetica,Arial,sans-serif"]'
+        write(unit,'(2X,A)') 'edge [fontname = "Helvetica,Arial,sans-serif"]'
+
         if (dpi > 0) write(unit,'(2X,"graph [ dpi = ",I0," ]")') dpi
         write(unit,'(2X,A)') "graph [ root = N1 ]"
 
         ! Nodes
         do i = 1, n_nodes
-            write(unit,'(2X,"N",I0,A)') i,'[ label = "'//dep(i)%name//'"]'
+            if (tooltip) then
+                write(unit,fmt_label_and_tooltip) i, qt(dep(i)%name), qt("Tooltip")
+            else
+                write(unit,fmt_label_only) i, qt(dep(i)%name)
+            end if
         end do
 
         ! Edges
@@ -259,6 +274,12 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
         end associate
 
     end subroutine
+
+    pure function qt(str)
+        character(len=*), intent(in) :: str
+        character(len=len(str)+2) :: qt
+        qt = '"'//str//'"'
+    end function
 
     ! Output dependency graph using Mermaid flowchart syntax
     ! An overview of the syntax can be found at
