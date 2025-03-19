@@ -1,0 +1,10 @@
+name = "fpmdeps"
+version = "0.1.0"
+license = "license"
+author = "Ivan Pribec"
+maintainer = "ivan.pribec@gmail.com"
+copyright = "Copyright 2025, Ivan Pribec"
+
+[dependencies]
+fpm.git = "https://github.com/fortran-lang/fpm"
+fpm.rev = "ac06dfc6a8c542261c4f5f133a119c2747d47da6"
