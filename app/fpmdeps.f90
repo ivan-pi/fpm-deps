@@ -7,7 +7,7 @@ use fpm_error, only: error_t
 
 implicit none
 
-integer :: nargs, k, unit
+integer :: nargs, k, unit, debug_unit
 character(len=:), allocatable :: name
 character(len=128) :: buf
 
@@ -18,6 +18,7 @@ character(len=:), allocatable :: outfile, manifest_path, cmd_url
 
 ! FIXME: check any environment variables of interest
 
+debug_unit = error_unit
 nargs = command_argument_count()
 call get_command_argument(0,buf) ! use program name for friendly output
 name = trim(buf)
@@ -43,17 +44,17 @@ do while (k <= nargs)
         k = k + 1
         call get_command_argument(k,buf)
         outfile = trim(buf)
-        print *, "outfile = "//outfile
+        write(debug_unit,'(A)') "outfile = "//outfile
     case('--manifest-path')
         k = k + 1
         call get_command_argument(k,buf)
         manifest_path = trim(buf)
-        print *, "manifest_path = "//manifest_path
+        write(debug_unit,'(A)') "manifest_path = "//manifest_path
     case('--dpi')
         k = k + 1
         call get_command_argument(k,buf)
         read(buf,*) cmd_dpi
-        print *, "cmd_dpi = ", cmd_dpi
+        write(debug_unit,'(A)') "cmd_dpi = ", cmd_dpi
     case('-d','--depth')
         k = k + 1
         call get_command_argument(k,buf)
@@ -62,7 +63,7 @@ do while (k <= nargs)
             write(error_unit,'(A)') name//": error: --depth must be non-negative"
             stop 1
         end if
-        print *, "cmd_depth = ", cmd_depth
+        write(debug_unit,'(A)') "cmd_depth = ", cmd_depth
     case('-M','--mermaid')
         cmd_mermaid = .true.
     case('--filter')
