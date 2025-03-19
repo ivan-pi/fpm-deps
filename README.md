@@ -5,9 +5,9 @@ Generate dependency graphs of fpm projects
 To start using `fpm-deps` run the commands:
 
 ```
-> git clone https://github.com/ivan-pi/fpm-deps && cd fpmdeps   # clone project
+> git clone https://github.com/ivan-pi/fpm-deps && cd fpm-deps   # clone project
 > fpm install --prefix ~/.local   # install in directory on the user PATH
-> fpm-deps   # run fpmdeps in the root directory of an fpm project
+> fpm-deps   # run fpm-deps in the root directory of an fpm project
 ```
 
 The result can be piped to the Graphviz [`dot`](https://graphviz.org/doc/info/command.html) command, e.g.:
