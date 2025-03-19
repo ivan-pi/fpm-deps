@@ -36,6 +36,7 @@ do while (k <= nargs)
 
     call get_command_argument(k,buf)
     ! FIXME: graceful exit on error
+    print *, k, trim(buf)
 
     select case(trim(buf))
     case('-o','--output')
@@ -47,7 +48,7 @@ do while (k <= nargs)
         k = k + 1
         call get_command_argument(k,buf)
         manifest_path = trim(buf)
-        print *, "manifest_path = "//outfile
+        print *, "manifest_path = "//manifest_path
     case('--dpi')
         k = k + 1
         call get_command_argument(k,buf)
@@ -108,7 +109,9 @@ block
     type(error_t), allocatable :: err
     integer :: i
 
-    call package%init_from_file("fpm.toml")
+
+    if (.not. allocated(manifest_path)) manifest_path = 'fpm.toml'
+    call package%init_from_file(manifest_path)
 
     ! These are the direct (i.e. first level) dependencies
     !print *, "Dependencies for package "//package%name
