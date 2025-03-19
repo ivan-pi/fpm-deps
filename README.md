@@ -1,4 +1,4 @@
-# fpmdeps
+# fpm-deps
 
 Generate dependency graphs of fpm projects
 
