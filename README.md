@@ -10,9 +10,18 @@ To start using `fpmdeps` run the commands:
 > fpmdeps  # run fpmdeps in the root directory of an fpm project
 ```
 
+The result can be piped to the Graphviz [`dot`](https://graphviz.org/doc/info/command.html) command, e.g.:
+
+```
+> fpmdeps | -Tsvg -ofpmdeps.svg
+```
+resulting in
+
+![fpmdeps package dependency graph](./fpmdeps.svg)
+
 ## Acknowledgments
 
-Thanks to @vmagnin for early testing via the fpm plugin mechanism and for pointing me toward the cargo dependency graph crates.
+Thanks to [@vmagnin](https://github.com/vmagnin) for early testing via the fpm plugin mechanism and for pointing me toward the existing cargo crates.
 
 ## See also
 
