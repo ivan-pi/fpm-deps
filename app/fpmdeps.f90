@@ -210,7 +210,8 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
 "   > fpmdeps --dpi 96 | dot -Tpng -ograph.png ", &
 "   > fpmdeps -o graph.gv", &
 "", &
-"Please report any errors encountered at ..."
+"Please report any errors encountered by opening a new issue at", &
+"  https://github.com/ivan-pi/fpmdeps"
 
     end subroutine
 
