@@ -37,7 +37,6 @@ do while (k <= nargs)
 
     call get_command_argument(k,buf)
     ! FIXME: graceful exit on error
-    print *, k, trim(buf)
 
     select case(trim(buf))
     case('-o','--output')
