@@ -4,6 +4,8 @@ license = "license"
 author = "Ivan Pribec"
 maintainer = "ivan.pribec@gmail.com"
 copyright = "Copyright 2025, Ivan Pribec"
+description = "Generate dependency graphs of Fortran packages"
+homepage = "https://github.com/ivan-pi/fpm-deps"
 
 [dependencies]
 fpm.git = "https://github.com/fortran-lang/fpm"

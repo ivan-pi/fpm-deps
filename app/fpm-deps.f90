@@ -2,7 +2,8 @@ program fpmdeps
 
 use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
 
-use fpm_deps, only: config_t, tree_t, new_tree
+use fpm_deps, only: config_t, tree_t, new_tree, &
+    package_properties, dependency_props
 use fpm_error, only: error_t
 
 implicit none
@@ -108,6 +109,7 @@ block
     type(tree_t) :: tree
     type(error_t), allocatable :: err
     logical, allocatable :: mask(:)
+    type(package_properties), allocatable :: props(:)
     integer :: i
 
 
@@ -142,6 +144,10 @@ block
     end if
     !stop
 
+    if (cmd_tooltip .or. allocated(cmd_url)) then
+        props = dependency_props(tree%dep,mask)
+    end if
+
     !print *, "Number of dependencies", tree%ndep
     !print *, "Dependencies are stored in ", tree%dep_dir
     !do i = 1, size(tree%dep)
@@ -170,11 +176,11 @@ block
     end if
 
     if (cmd_mermaid) then
-        call print_mermaid(unit,package%name,tree,mask, &
+        call print_mermaid(unit,package%name,tree,mask,props, &
             url=allocated(cmd_url), &
             tooltip=cmd_tooltip)
     else
-        call print_graphviz(unit,package%name,tree,mask, &
+        call print_graphviz(unit,package%name,tree,mask,props, &
             url=allocated(cmd_url), &
             tooltip=cmd_tooltip, &
             dpi=cmd_dpi)
@@ -231,15 +237,28 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
 
     end subroutine
 
+    subroutine print_dep(tree)
+        type(tree_t), intent(in) :: tree
+        integer :: i
+        do i = 1, tree%ndep
+            associate(dep => tree%dep(i))
+            !print *, i, allocated(dep%dependency), allocated(dep%dev_dependency), dep%name
+            end associate
+        end do
+        stop
+
+    end subroutine
+
 
     ! Output dependency graph using the Graphviz DOT language
     ! An overview of the syntax can be found at
     !     https://graphviz.org/doc/info/lang.html
-    subroutine print_graphviz(unit, name, tree, mask, url, tooltip, dpi)
+    subroutine print_graphviz(unit, name, tree, mask, props, url, tooltip, dpi)
         integer, intent(in) :: unit
         character(len=*), intent(in) :: name
         type(tree_t), intent(in) :: tree
         logical, intent(in) :: mask(:)
+        type(package_properties), intent(in) :: props(:)
         logical, intent(in) :: url, tooltip
         integer, intent(in) :: dpi
 
@@ -248,7 +267,9 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
         character(len=*), parameter :: fmt_label_only = &
             '(2X,"N",I0,"[ label = ",A,"]")'
         character(len=*), parameter :: fmt_label_and_tooltip = &
-            '(2X,"N",I0,"[ label =",A,",tooltip =",A,"]")'
+            '(2X,"N",I0,"[ label = ",A,", tooltip = ",A,"]")'
+
+        character(len=:), allocatable :: tt
 
         associate(n_nodes => size(tree%dep), dep => tree%dep)
 
@@ -264,7 +285,12 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
 ! FIXME: URL
             if (.not. mask(i)) cycle
             if (tooltip) then
-                write(unit,fmt_label_and_tooltip) i, qt(dep(i)%name), qt("Tooltip")
+                if (allocated(props(i)%description)) then
+                    tt = qt(props(i)%description)
+                else
+                    tt = qt("Description unavailable")
+                end if
+                write(unit,fmt_label_and_tooltip) i, qt(dep(i)%name), tt
             else
                 write(unit,fmt_label_only) i, qt(dep(i)%name)
             end if
@@ -295,11 +321,12 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
     ! Output dependency graph using Mermaid flowchart syntax
     ! An overview of the syntax can be found at
     !     https://mermaid.js.org/syntax/flowchart.html
-    subroutine print_mermaid(unit,name,tree,mask,url,tooltip)
+    subroutine print_mermaid(unit,name,tree,mask,props,url,tooltip)
         integer, intent(in) :: unit
         character(len=*), intent(in) :: name
         type(tree_t), intent(in) :: tree
         logical, intent(in) :: mask(:)
+        type(package_properties), intent(in) :: props(:)
         logical, intent(in) :: url, tooltip
 
         integer :: i, j, k

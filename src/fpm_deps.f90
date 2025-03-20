@@ -13,6 +13,9 @@ private
 public :: config_t
 public :: tree_t, new_tree
 
+public :: package_properties
+public :: dependency_props
+
 type, extends(package_config_t) :: config_t
 contains
     procedure :: init_from_file
@@ -28,6 +31,8 @@ type, extends(dependency_tree_t) :: tree_t
     !> Dependency graph
     integer, allocatable :: ia(:)  ! len (ndep + 1)
     integer, allocatable :: ja(:)  ! nnz = number of edges
+
+    logical, allocatable :: is_dev_dep(:)
 contains
     ! New method
     procedure, private :: resolve_with_graph => resolve_dependency_with_graph
@@ -39,6 +44,11 @@ end type
 
 !> Common output format for writing to the command line
 character(len=*), parameter :: out_fmt = '("#", *(1x, g0))'
+
+
+type :: package_properties
+  character(len=:), allocatable :: description, homepage
+end type
 
 contains
 
@@ -199,5 +209,56 @@ contains
     end if
 
   end subroutine resolve_dependency_with_graph
+
+
+  function dependency_props(deps,mask) result(props)
+    use fpm_dependency, only: dependency_node_t
+    type(dependency_node_t), intent(in) :: deps(:)
+    logical, intent(in), optional :: mask(:)
+    type(package_properties), allocatable :: props(:)
+
+    integer :: i
+
+    allocate(props(size(deps)))
+
+    do i = 1, size(deps)
+      if (present(mask)) then
+        if (mask(i)) props(i) = fetch_package_properties(deps(i))
+      else
+        props(i) = fetch_package_properties(deps(i))
+      end if
+    end do
+
+  end function
+
+  !> Fetch relevant properties from the fpm manifest file
+  function fetch_package_properties(dep) result(props)
+
+      use fpm_dependency, only: dependency_node_t
+      use fpm_error, only: error_t, fatal_error
+      use fpm_toml, only: toml_table, read_package_file, get_value
+      use fpm_filesystem, only: join_path
+
+      type(dependency_node_t), intent(in) :: dep
+      type(package_properties) :: props
+
+      character(len=:), allocatable :: manifest
+      type(error_t), allocatable :: error
+      type(toml_table), allocatable :: table
+
+      manifest = join_path(dep%proj_dir, "fpm.toml")
+
+      call read_package_file(table, manifest, error)
+      if (allocated(error)) return
+
+      if (.not. allocated(table)) then
+          call fatal_error(error, "Unclassified error while reading: '"//manifest//"'")
+          return
+      end if
+
+      call get_value(table, "description", props%description)
+      call get_value(table, "homepage", props%homepage)
+
+  end function
 
 end module
