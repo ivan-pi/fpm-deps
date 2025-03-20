@@ -81,7 +81,8 @@ do while (k <= nargs)
         call get_command_argument(k,buf)
         cmd_url = trim(buf)
         select case(cmd_url)
-        case('homepage','dir','git')
+!        case('homepage','dir','git')
+        case('homepage')
             continue
         case default
             write(error_unit,'(A)') "Unknown option for --url "//cmd_url
@@ -221,7 +222,7 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
 " --no-meta         ignore meta-dependencies in dependency graph", &
 " -M, --mermaid     output graph using Mermaid flowchart syntax", &
 " --dpi <int>       dots-per-inch; useful when piping dot for bitmap output", &
-" --url {homepage,dir,git}", &
+" --url {homepage}", &
 "                   add hyper-links to the graph nodes", &
 " --no-tooltip      add package description as tooltip; useful when converted", &
 "                   to SVG using dot or in case of Mermaid output", &
@@ -264,12 +265,10 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
 
         integer :: i, j, k
 
-        character(len=*), parameter :: fmt_label_only = &
-            '(2X,"N",I0,"[ label = ",A,"]")'
-        character(len=*), parameter :: fmt_label_and_tooltip = &
-            '(2X,"N",I0,"[ label = ",A,", tooltip = ",A,"]")'
+        character(len=*), parameter :: fmt = '(2X,"N",I0,"[ ",A," ]")'
 
         character(len=:), allocatable :: tt
+        character(len=:), allocatable :: attr
 
         associate(n_nodes => size(tree%dep), dep => tree%dep)
 
@@ -284,16 +283,22 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
         do i = 1, n_nodes
 ! FIXME: URL
             if (.not. mask(i)) cycle
+
+            attr = "label = "//qt(dep(i)%name)
             if (tooltip) then
                 if (allocated(props(i)%description)) then
-                    tt = qt(props(i)%description)
+                    attr = attr//", tooltip = "//qt(props(i)%description)
                 else
-                    tt = qt("Description unavailable")
+                    attr = attr//", tooltip = "//qt("Description unavailable")
                 end if
-                write(unit,fmt_label_and_tooltip) i, qt(dep(i)%name), tt
-            else
-                write(unit,fmt_label_only) i, qt(dep(i)%name)
             end if
+            if (url) then
+                if (allocated(props(i)%homepage)) then
+                    attr = attr//", URL = "//qt(props(i)%homepage)
+                end if
+            end if
+
+            write(unit,fmt) i, attr
         end do
 
         ! Edges
