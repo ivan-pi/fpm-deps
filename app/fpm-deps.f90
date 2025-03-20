@@ -255,9 +255,9 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
         associate(n_nodes => size(tree%dep), dep => tree%dep)
 
         ! Preamble
-        write(unit,'(A)') "strict digraph "//name//" {"
-        write(unit,'(2X,A)') 'node [fontname = "Helvetica,Arial,sans-serif"]'
-        write(unit,'(2X,A)') 'edge [fontname = "Helvetica,Arial,sans-serif"]'
+        write(unit,'(A)') "strict digraph "//qt(name)//" {"
+        write(unit,'(2X,A)') 'node [ fontname = "Helvetica,Arial,sans-serif" ]'
+        write(unit,'(2X,A)') 'edge [ fontname = "Helvetica,Arial,sans-serif" ]'
         if (dpi > 0) write(unit,'(2X,"graph [ dpi = ",I0," ]")') dpi
         write(unit,'(2X,A)') "graph [ root = N1 ]"
 
