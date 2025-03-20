@@ -59,10 +59,10 @@ do while (k <= nargs)
         call get_command_argument(k,buf)
         read(buf,*) cmd_depth
         if (cmd_depth < 0) then
-            write(error_unit,'(A)') name//": error: --depth must be non-negative"
+            write(error_unit,'(A)') name//": error: depth must be non-negative"
             stop 1
         end if
-        write(debug_unit,'(A)') "cmd_depth = ", cmd_depth
+        write(debug_unit,'(A,I0)') "cmd_depth = ", cmd_depth
     case('-M','--mermaid')
         cmd_mermaid = .true.
     case('--filter')
@@ -107,6 +107,7 @@ block
     type(config_t) :: package
     type(tree_t) :: tree
     type(error_t), allocatable :: err
+    logical, allocatable :: mask(:)
     integer :: i
 
 
@@ -131,6 +132,15 @@ block
         write(error_unit,'(A)') err%message
         error stop "building dependency tree failed"
     end if
+    !tree%ndeps = size(tree%dep)
+
+    allocate(mask(size(tree%dep)))
+    if (cmd_depth > 0) then
+        call recurse(tree,cmd_depth,mask)
+    else
+        mask = .true.
+    end if
+    !stop
 
     !print *, "Number of dependencies", tree%ndep
     !print *, "Dependencies are stored in ", tree%dep_dir
@@ -160,11 +170,11 @@ block
     end if
 
     if (cmd_mermaid) then
-        call print_mermaid(unit,package%name,tree, &
+        call print_mermaid(unit,package%name,tree,mask, &
             url=allocated(cmd_url), &
             tooltip=cmd_tooltip)
     else
-        call print_graphviz(unit,package%name,tree, &
+        call print_graphviz(unit,package%name,tree,mask, &
             url=allocated(cmd_url), &
             tooltip=cmd_tooltip, &
             dpi=cmd_dpi)
@@ -225,10 +235,11 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
     ! Output dependency graph using the Graphviz DOT language
     ! An overview of the syntax can be found at
     !     https://graphviz.org/doc/info/lang.html
-    subroutine print_graphviz(unit, name, tree, url, tooltip, dpi)
+    subroutine print_graphviz(unit, name, tree, mask, url, tooltip, dpi)
         integer, intent(in) :: unit
         character(len=*), intent(in) :: name
         type(tree_t), intent(in) :: tree
+        logical, intent(in) :: mask(:)
         logical, intent(in) :: url, tooltip
         integer, intent(in) :: dpi
 
@@ -240,18 +251,20 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
             '(2X,"N",I0,"[ label =",A,",tooltip =",A,"]")'
 
 
+
         associate(n_nodes => size(tree%dep), dep => tree%dep)
 
         ! Preamble
         write(unit,'(A)') "strict digraph "//name//" {"
         write(unit,'(2X,A)') 'node [fontname = "Helvetica,Arial,sans-serif"]'
         write(unit,'(2X,A)') 'edge [fontname = "Helvetica,Arial,sans-serif"]'
-
         if (dpi > 0) write(unit,'(2X,"graph [ dpi = ",I0," ]")') dpi
         write(unit,'(2X,A)') "graph [ root = N1 ]"
 
         ! Nodes
         do i = 1, n_nodes
+! FIXME: URL
+            if (.not. mask(i)) cycle
             if (tooltip) then
                 write(unit,fmt_label_and_tooltip) i, qt(dep(i)%name), qt("Tooltip")
             else
@@ -262,9 +275,10 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
         ! Edges
         associate(ia => tree%ia, ja => tree%ja)
         do k = 1, size(ia)-1
-                do j = ia(k)+1, ia(k+1)-1
-                    write(unit,'(2X,"N",I0,"->","N",I0)') k, ja(j)
-                end do
+            do j = ia(k)+1, ia(k+1)-1
+                if (.not. mask(ja(j))) cycle
+                write(unit,'(2X,"N",I0,"->","N",I0)') k, ja(j)
+            end do
         end do
         end associate
 
@@ -283,10 +297,11 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
     ! Output dependency graph using Mermaid flowchart syntax
     ! An overview of the syntax can be found at
     !     https://mermaid.js.org/syntax/flowchart.html
-    subroutine print_mermaid(unit,name,tree,url,tooltip)
+    subroutine print_mermaid(unit,name,tree,mask,url,tooltip)
         integer, intent(in) :: unit
         character(len=*), intent(in) :: name
         type(tree_t), intent(in) :: tree
+        logical, intent(in) :: mask(:)
         logical, intent(in) :: url, tooltip
 
         integer :: i, j, k
@@ -298,19 +313,67 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
 
         ! Nodes
         do i = 1, n_nodes
+            if (.not. mask(k)) cycle
             write(unit,'(2X,"N",I0,A)') i,"["//dep(i)%name//"]"
         end do
+
+! FIXME: URL, tooltip
 
         ! Edges
         associate(ia => tree%ia, ja => tree%ja)
         do k = 1, size(ia)-1
             do j = ia(k)+1, ia(k+1)-1
+                if (.not. mask(ja(j))) cycle
                 write(unit,'(2X,"N",I0,"-->","N",I0)') k, ja(j)
             end do
         end do
         end associate
 
         end associate
+
+    end subroutine
+
+
+    subroutine recurse(tree, depth, mask)
+        type(tree_t), intent(in) :: tree
+        integer, intent(in) :: depth
+        logical, intent(out) :: mask(:)
+
+        ! The number of dependencies should fit in an automatic array
+        integer :: d(size(tree%dep)), k
+
+        !print *, allocated(tree%ia), size(tree%ia)
+        !print *, allocated(tree%ja), size(tree%ja)
+
+        d = -1
+
+        ! the root node
+        d(1) = 1
+        call bfs(size(d),tree%ia,tree%ja,d,1)
+
+        !print *, "Search is done"
+        !do k = 1, size(d)
+        !    print *, k, tree%dep(k)%name, d(k)
+        !end do
+
+        mask = d <= depth
+
+    end subroutine
+
+    !> Assign depths using a breadth-first search
+    recursive subroutine bfs(n,ia,ja,depth,k)
+        integer, intent(in) :: n, k
+        integer, intent(in) :: ia(n+1), ja(:)
+        integer, intent(inout) :: depth(n)
+
+        integer :: j
+
+        do j = ia(k)+1, ia(k+1)-1
+            if (depth(ja(j)) < 0) then
+                depth(ja(j)) = depth(k) + 1
+                if (j <= n) call bfs(n,ia,ja,depth,k=j)
+            end if
+        end do
 
     end subroutine
 
