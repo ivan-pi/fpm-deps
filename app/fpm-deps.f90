@@ -250,8 +250,6 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
         character(len=*), parameter :: fmt_label_and_tooltip = &
             '(2X,"N",I0,"[ label =",A,",tooltip =",A,"]")'
 
-
-
         associate(n_nodes => size(tree%dep), dep => tree%dep)
 
         ! Preamble
@@ -333,30 +331,27 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
 
     end subroutine
 
-
-    subroutine recurse(tree, depth, mask)
+    ! Mask the dependencies which should remain part of the output
+    subroutine recurse(tree, max_depth, mask)
         type(tree_t), intent(in) :: tree
-        integer, intent(in) :: depth
-        logical, intent(out) :: mask(:)
+        integer, intent(in) :: max_depth
+        logical, intent(out) :: mask(size(tree%dep))
 
         ! The number of dependencies should fit in an automatic array
+        ! This could potentially break with a very large dependency tree
+        ! but we assume that is unlikely.
         integer :: d(size(tree%dep)), k
 
-        !print *, allocated(tree%ia), size(tree%ia)
-        !print *, allocated(tree%ja), size(tree%ja)
-
+        ! Mark all nodes as unvisitied
         d = -1
 
-        ! the root node
+        ! Set the depth of the root node
         d(1) = 1
+
+        ! Traverse the assigning depths to the nodes starting from the root.
         call bfs(size(d),tree%ia,tree%ja,d,1)
 
-        !print *, "Search is done"
-        !do k = 1, size(d)
-        !    print *, k, tree%dep(k)%name, d(k)
-        !end do
-
-        mask = d <= depth
+        mask = d <= max_depth
 
     end subroutine
 
@@ -368,8 +363,11 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
 
         integer :: j
 
+        ! Search the dependencies
         do j = ia(k)+1, ia(k+1)-1
             if (depth(ja(j)) < 0) then
+                ! If the node has not been visited yet assign the
+                ! depth and continue the search
                 depth(ja(j)) = depth(k) + 1
                 if (j <= n) call bfs(n,ia,ja,depth,k=j)
             end if
