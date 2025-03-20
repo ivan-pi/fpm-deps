@@ -13,9 +13,9 @@ character(len=:), allocatable :: name
 character(len=128) :: buf
 
 ! Command-line options
-logical :: cmd_meta, cmd_tooltip, cmd_mermaid
+logical :: cmd_meta, cmd_tooltip, cmd_mermaid, cmd_url
 integer :: cmd_dpi, cmd_depth
-character(len=:), allocatable :: outfile, manifest_path, cmd_url
+character(len=:), allocatable :: outfile, manifest_path
 
 ! FIXME: check any environment variables of interest
 
@@ -27,6 +27,7 @@ name = trim(buf)
 ! Default settings
 cmd_meta = .true.
 cmd_tooltip = .true.
+cmd_url = .true.
 cmd_mermaid = .false.
 cmd_dpi = -1
 cmd_depth = -1
@@ -76,19 +77,8 @@ do while (k <= nargs)
         cmd_meta = .false.
     case('--no-tooltip')
         cmd_tooltip = .false.
-    case('--url')
-        k = k + 1
-        call get_command_argument(k,buf)
-        cmd_url = trim(buf)
-        select case(cmd_url)
-!        case('homepage','dir','git')
-        case('homepage')
-            continue
-        case default
-            write(error_unit,'(A)') "Unknown option for --url "//cmd_url
-            write(error_unit,'(A)') "Valid options include homepage,dir,git."
-            stop 1
-        end select
+    case('--no-url')
+        cmd_url = .false.
     case('-h','--help')
         call show_help
         stop 0
@@ -145,7 +135,7 @@ block
     end if
     !stop
 
-    if (cmd_tooltip .or. allocated(cmd_url)) then
+    if (cmd_tooltip .or. cmd_url) then
         props = dependency_props(tree%dep,mask)
     end if
 
@@ -178,11 +168,11 @@ block
 
     if (cmd_mermaid) then
         call print_mermaid(unit,package%name,tree,mask,props, &
-            url=allocated(cmd_url), &
+            url=cmd_url, &
             tooltip=cmd_tooltip)
     else
         call print_graphviz(unit,package%name,tree,mask,props, &
-            url=allocated(cmd_url), &
+            url=cmd_url, &
             tooltip=cmd_tooltip, &
             dpi=cmd_dpi)
     end if
@@ -222,8 +212,7 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
 " --no-meta         ignore meta-dependencies in dependency graph", &
 " -M, --mermaid     output graph using Mermaid flowchart syntax", &
 " --dpi <int>       dots-per-inch; useful when piping dot for bitmap output", &
-" --url {homepage}", &
-"                   add hyper-links to the graph nodes", &
+" --no-url          do not add the homepage URL to the nodes", &
 " --no-tooltip      add package description as tooltip; useful when converted", &
 "                   to SVG using dot or in case of Mermaid output", &
 "", &
@@ -335,6 +324,7 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
         logical, intent(in) :: url, tooltip
 
         integer :: i, j, k
+        character(len=:), allocatable :: attr
 
         associate(n_nodes => size(tree%dep), dep => tree%dep)
 
@@ -343,11 +333,21 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
 
         ! Nodes
         do i = 1, n_nodes
-            if (.not. mask(k)) cycle
+            if (.not. mask(i)) cycle
             write(unit,'(2X,"N",I0,A)') i,"["//dep(i)%name//"]"
         end do
 
-! FIXME: URL, tooltip
+        if (url) then
+            ! Click URL links
+            do i = 1, n_nodes
+                if (.not. mask(i)) cycle
+                if (allocated(props(i)%homepage)) then
+                    write(unit,'(2X,"click N",I0,1x,A)') i, qt(props(i)%homepage)
+                end if
+            end do
+        end if
+
+! FIXME: tooltip
 
         ! Edges
         associate(ia => tree%ia, ja => tree%ja)
