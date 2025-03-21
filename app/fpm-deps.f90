@@ -75,6 +75,19 @@ do while (k <= nargs)
         write(debug_unit,'(A,I0)') "cmd_depth = ", cmd_depth
     case('-M','--mermaid')
         cmd_mermaid = .true.
+        if (k < nargs) then
+            call get_command_argument(k+1,buf)
+            select case(trim(buf))
+            case('html')
+                cmd_html = .true.
+                k = k + 1
+            case default
+                if (buf(1:1) == '-') cycle
+                write(error_unit,'(A)') &
+                    name//": error: "//trim(buf)//" is not a valid option for --mermaid (-M)"
+                stop 1
+            end select
+        end if
     case('--html')
         cmd_html = .true.
     case('--filter')
@@ -239,7 +252,7 @@ contains
     write(output_unit,'(*(A,/))') &
 "Usage: "//name//" [-h] [--version] [-o OUTPUT] [--manifest_path PATH]", &
 prefix//" [--depth D] [--no-meta] [--exclude <comma_separated_list>]", &
-prefix//" [--mermaid] [--dpi DPI] [--no-url] [--no-tooltip]", &
+prefix//" [--mermaid [html]] [--dpi DPI] [--no-url] [--no-tooltip]", &
 "", &
 "Create a fpm project dependency graph in DOT language", &
 "", &
@@ -259,7 +272,9 @@ prefix//" [--mermaid] [--dpi DPI] [--no-url] [--no-tooltip]", &
 " --exclude <comma_separated_list>", &
 "                   a list of packages to be excluded from the graph. use", &
 "                   of quotes is necessary for correct parsing", &
-" -M, --mermaid     output graph using Mermaid flowchart syntax", &
+" -M [html], --mermaid [html]", &
+"                   output graph using Mermaid flowchart syntax; if html is",&
+"                   present, create a standalone web-page", &
 " --dpi <int>       dots-per-inch; useful when piping dot for bitmap output", &
 " --no-url          do not add the homepage URL to the nodes", &
 " --no-tooltip      add package description as tooltip; useful when converted", &
