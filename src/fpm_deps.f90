@@ -16,6 +16,8 @@ public :: tree_t, new_tree
 public :: package_properties
 public :: dependency_props
 
+public :: exclude_mask
+
 type, extends(package_config_t) :: config_t
 contains
     procedure :: init_from_file
@@ -258,6 +260,29 @@ contains
 
       call get_value(table, "description", props%description)
       call get_value(table, "homepage", props%homepage)
+
+  end function
+
+  !> Create a logical mask out of the user-specified exclude string
+  !>
+  !>   .true. means remove the dependency along with any sub-dependencies
+  !>   .false. means keep the dependency
+  !>
+  function exclude_mask(deps,exclude) result(ex)
+    use fpm_dependency, only: dependency_node_t
+    type(dependency_node_t), intent(in) :: deps(:)
+    character(len=*), intent(in) :: exclude  ! A comma-separated list of packages
+    logical, allocatable :: ex(:)
+
+    integer :: i
+
+    allocate(ex(size(deps)))
+
+    do i = 1, size(deps)
+      ex(i) = index(exclude,deps(i)%name) > 0
+    end do
+
+    ! FIXME: warning about packages not found
 
   end function
 

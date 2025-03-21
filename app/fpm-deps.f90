@@ -3,7 +3,8 @@ program fpmdeps
 use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
 
 use fpm_deps, only: config_t, tree_t, new_tree, &
-    package_properties, dependency_props
+    package_properties, dependency_props, &
+    exclude_mask
 use fpm_error, only: error_t
 
 implicit none
@@ -15,7 +16,7 @@ character(len=128) :: buf
 ! Command-line options
 logical :: cmd_meta, cmd_tooltip, cmd_mermaid, cmd_url
 integer :: cmd_dpi, cmd_depth
-character(len=:), allocatable :: outfile, manifest_path
+character(len=:), allocatable :: outfile, manifest_path, exclude
 
 ! FIXME: check any environment variables of interest
 
@@ -70,7 +71,12 @@ do while (k <= nargs)
     case('--filter')
         write(error_unit,'(A)') "warning: --filter will be ignored"
     case('--exclude')
-        write(error_unit,'(A)') "warning: --exclude will be ignored"
+! FIXME: not very robust currently, the excluded packages should
+!        be quoted to become one string.
+        k = k + 1
+        call get_command_argument(k,buf)
+        exclude = trim(buf)
+        !print *, exclude
     case('--meta')
         continue
     case('--no-meta')
@@ -99,7 +105,7 @@ block
     type(config_t) :: package
     type(tree_t) :: tree
     type(error_t), allocatable :: err
-    logical, allocatable :: mask(:)
+    logical, allocatable :: mask(:), ex(:), tmp(:)
     type(package_properties), allocatable :: props(:)
     integer :: i
 
@@ -127,14 +133,31 @@ block
     end if
     !tree%ndeps = size(tree%dep)
 
+    ! Mask nodes based on depth
     allocate(mask(size(tree%dep)))
     if (cmd_depth > 0) then
         call recurse(tree,cmd_depth,mask)
     else
         mask = .true.
     end if
-    !stop
 
+    ! Mask nodes for exclusion
+    if (allocated(exclude)) then
+        ex = .not. exclude_mask(tree%dep,exclude)
+
+        allocate(tmp,mold=ex)
+        call combine_masks(tree,mask,ex,tmp)
+        mask = tmp
+
+! FIXME: for some reason I need to create a temporary array as above?
+!        call combine_masks(tree,(mask),ex,mask)
+
+!        do i = 1, tree%ndep
+!            print *, i, mask(i), ex(i), tmp(i), tree%dep(i)%name
+!        end do
+    end if
+
+    ! Gather dependency package attributes used for URL and tooltip annotation
     if (cmd_tooltip .or. cmd_url) then
         props = dependency_props(tree%dep,mask)
     end if
@@ -192,8 +215,8 @@ contains
 
     write(output_unit,'(*(A,/))') &
 "Usage: "//name//" [-h] [--version] [-o OUTPUT] [--manifest_path PATH]", &
-prefix//" [-a] [--depth D] [--no-meta] [--filter ...] [--exclude ...]", &
-prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
+prefix//" [--depth D] [--no-meta] [--exclude <comma_separated_list>]", &
+prefix//" [--mermaid] [--dpi DPI] [--no-url] [--no-tooltip]", &
 "", &
 "Create a fpm project dependency graph in DOT language", &
 "", &
@@ -208,8 +231,11 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
 " -d, --depth <d>   dependency depth to consider during output; --depth 1", &
 "                   will show only direct dependencies. use --depth 0 to", &
 "                   obtain the full depth", &
-" -a, --all         show all dependencies, including app, test, and examples", &
+!" -a, --all         show all dependencies, including app, test, and examples", &
 " --no-meta         ignore meta-dependencies in dependency graph", &
+" --exclude <comma_separated_list>", &
+"                   a list of packages to be excluded from the graph. use", &
+"                   of quotes is necessary for correct parsing", &
 " -M, --mermaid     output graph using Mermaid flowchart syntax", &
 " --dpi <int>       dots-per-inch; useful when piping dot for bitmap output", &
 " --no-url          do not add the homepage URL to the nodes", &
@@ -238,6 +264,9 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
         stop
 
     end subroutine
+
+
+
 
 
     ! Output dependency graph using the Graphviz DOT language
@@ -293,6 +322,7 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
         ! Edges
         associate(ia => tree%ia, ja => tree%ja)
         do k = 1, size(ia)-1
+            if (.not. mask(k)) cycle
             do j = ia(k)+1, ia(k+1)-1
                 if (.not. mask(ja(j))) cycle
                 write(unit,'(2X,"N",I0,"->","N",I0)') k, ja(j)
@@ -352,6 +382,7 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
         ! Edges
         associate(ia => tree%ia, ja => tree%ja)
         do k = 1, size(ia)-1
+            if (.not. mask(k)) cycle
             do j = ia(k)+1, ia(k+1)-1
                 if (.not. mask(ja(j))) cycle
                 write(unit,'(2X,"N",I0,"-->","N",I0)') k, ja(j)
@@ -363,16 +394,18 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
 
     end subroutine
 
+
     ! Mask the dependencies which should remain part of the output
-    subroutine recurse(tree, max_depth, mask)
+    subroutine recurse(tree, max_depth, mask, ex)
         type(tree_t), intent(in) :: tree
         integer, intent(in) :: max_depth
-        logical, intent(out) :: mask(size(tree%dep))
+        logical, intent(out) :: mask(tree%ndep)
+        logical, intent(in), optional :: ex(tree%ndep)
 
         ! The number of dependencies should fit in an automatic array
         ! This could potentially break with a very large dependency tree
         ! but we assume that is unlikely.
-        integer :: d(size(tree%dep)), k
+        integer :: d(tree%ndep), k
 
         ! Mark all nodes as unvisitied
         d = -1
@@ -381,7 +414,7 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
         d(1) = 1
 
         ! Traverse the assigning depths to the nodes starting from the root.
-        call bfs(size(d),tree%ia,tree%ja,d,1)
+        call bfs(tree%ndep,tree%ia,tree%ja,d,1)
 
         mask = d <= max_depth
 
@@ -402,6 +435,41 @@ prefix//" [--mermaid] [--dpi DPI] [--url {homepage,dir,git}] [--no-tooltip]", &
                 ! depth and continue the search
                 depth(ja(j)) = depth(k) + 1
                 if (j <= n) call bfs(n,ia,ja,depth,k=j)
+            end if
+        end do
+
+    end subroutine
+
+
+    !> Combine the depth mask and the excluded mask
+    !>
+    !>   A bread-first search must be used to correctly propagate the
+    !>   the mask values.
+    !>
+    subroutine combine_masks(tree,depth,ex,c)
+        type(tree_t), intent(in) :: tree
+        logical, intent(in) :: depth(tree%ndep), ex(tree%ndep)
+        logical, intent(out) :: c(tree%ndep)
+
+        c(1) = .true.
+        call bfs_mask(tree%ndep,tree%ia,tree%ja,depth,ex,c,1)
+
+    end subroutine
+
+    !> Propagate mask values to dependencies
+    recursive subroutine bfs_mask(n,ia,ja,d,ex,c,k)
+        integer, intent(in) :: n, k
+        integer, intent(in) :: ia(n+1), ja(:)
+        logical, intent(in) :: d(n), ex(n)
+        logical, intent(inout) :: c(n)
+
+        integer :: j
+
+        ! Search the dependencies
+        do j = ia(k)+1, ia(k+1)-1
+            if (d(ja(j)) .eqv. ex(ja(j))) then
+                c(ja(j)) = .true.
+                if (j <= n) call bfs_mask(n,ia,ja,d,ex,c,k=j)
             end if
         end do
 
