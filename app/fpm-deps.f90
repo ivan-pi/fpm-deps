@@ -16,6 +16,7 @@ character(len=128) :: buf
 ! Command-line options
 logical :: cmd_meta, cmd_tooltip, cmd_mermaid, cmd_url, cmd_html
 integer :: cmd_dpi, cmd_depth
+character(len=2) :: cmd_orientation
 character(len=:), allocatable :: outfile, manifest_path, exclude
 
 ! Data structures
@@ -32,6 +33,7 @@ call get_command_argument(0,buf) ! use program name for friendly output
 name = trim(buf)
 
 ! Default settings
+cmd_orientation = 'TB'
 cmd_meta = .true.
 cmd_tooltip = .true.
 cmd_url = .true.
@@ -90,6 +92,18 @@ do while (k <= nargs)
                 stop 1
             end select
         end if
+    case('--orientation')
+        k = k + 1
+        call get_command_argument(k,buf)
+        select case(trim(buf))
+        case('TB','TD','BT','LR','RL')
+            cmd_orientation = buf(1:2)
+            if (cmd_orientation == 'TD') cmd_orientation = 'TB'
+        case default
+            write(error_unit,'(A)') &
+                name//": error: '"//trim(buf)//"' is not a valid --orientation {TB,BT,LR,RL}"
+            stop 1
+        end select
     case('--html')
         cmd_html = .true.
     case('--filter')
@@ -219,13 +233,15 @@ block
         else
             call print_mermaid(unit,package%name,tree,mask,props, &
                 url=cmd_url, &
-                tooltip=cmd_tooltip)
+                tooltip=cmd_tooltip, &
+                orientation=cmd_orientation)
         end if
     else
         call print_graphviz(unit,package%name,tree,mask,props, &
             url=cmd_url, &
             tooltip=cmd_tooltip, &
-            dpi=cmd_dpi)
+            dpi=cmd_dpi, &
+            orientation=cmd_orientation)
     end if
 
     ! FIXME: flushed by default if open, can be removed
@@ -243,7 +259,8 @@ contains
 ! FIXME: hacky way to pass properties via host association
         call print_mermaid(html_unit,name,tree,mask,props, &
             url=cmd_url, &
-            tooltip=cmd_tooltip)
+            tooltip=cmd_tooltip, &
+            orientation=cmd_orientation)
     end subroutine
 
     subroutine show_help()
@@ -282,6 +299,8 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
 " --no-url          do not add the homepage URL to the nodes", &
 " --no-tooltip      add package description as tooltip; useful when converted", &
 "                   to SVG using dot or in case of Mermaid output", &
+" --orientation     the graph orientation (valid options are TB, BT, RL, LR)", &
+"                   default orientation is TB", &
 "", &
 "By default output is written to standard output and can be processed", &
 "using the dot command. Example:", &
@@ -313,7 +332,8 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
     ! Output dependency graph using the Graphviz DOT language
     ! An overview of the syntax can be found at
     !     https://graphviz.org/doc/info/lang.html
-    subroutine print_graphviz(unit, name, tree, mask, props, url, tooltip, dpi)
+    subroutine print_graphviz(unit, name, tree, mask, props, url, tooltip, &
+            dpi, orientation)
         integer, intent(in) :: unit
         character(len=*), intent(in) :: name
         type(tree_t), intent(in) :: tree
@@ -321,6 +341,7 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
         type(package_properties), intent(in) :: props(:)
         logical, intent(in) :: url, tooltip
         integer, intent(in) :: dpi
+        character(len=2), intent(in) :: orientation
 
         integer :: i, j, k
 
@@ -333,6 +354,7 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
 
         ! Preamble
         write(unit,'(A)') "strict digraph "//qt(name)//" {"
+        write(unit,'(2X,A)') 'rankdir="'//orientation//'"'
         write(unit,'(2X,A)') 'node [ fontname = "Helvetica,Arial,sans-serif" ]'
         write(unit,'(2X,A)') 'edge [ fontname = "Helvetica,Arial,sans-serif" ]'
         if (dpi > 0) write(unit,'(2X,"graph [ dpi = ",I0," ]")') dpi
@@ -386,13 +408,14 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
     ! Output dependency graph using Mermaid flowchart syntax
     ! An overview of the syntax can be found at
     !     https://mermaid.js.org/syntax/flowchart.html
-    subroutine print_mermaid(unit,name,tree,mask,props,url,tooltip)
+    subroutine print_mermaid(unit,name,tree,mask,props,url,tooltip,orientation)
         integer, intent(in) :: unit
         character(len=*), intent(in) :: name
         type(tree_t), intent(in) :: tree
         logical, intent(in) :: mask(:)
         type(package_properties), intent(in) :: props(:)
         logical, intent(in) :: url, tooltip
+        character(len=2), intent(in) :: orientation
 
         integer :: i, j, k
         character(len=:), allocatable :: attr
@@ -400,7 +423,7 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
         associate(n_nodes => size(tree%dep), dep => tree%dep)
 
         ! Preamble
-        write(unit,'(A)') "flowchart TB"
+        write(unit,'(A)') "flowchart "//orientation
 
         ! Nodes
         do i = 1, n_nodes
