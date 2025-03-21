@@ -10,6 +10,8 @@ To start using `fpm-deps` run the commands:
 > fpm-deps   # run fpm-deps in the root directory of an fpm project
 ```
 
+## Graphviz
+
 The result can be piped to the Graphviz [`dot`](https://graphviz.org/doc/info/command.html) command, e.g.:
 
 ```
@@ -18,6 +20,18 @@ The result can be piped to the Graphviz [`dot`](https://graphviz.org/doc/info/co
 resulting in
 
 ![fpmdeps package dependency graph](./fpmdeps.svg)
+
+## Mermaid
+
+To generate a [Mermaid](https://mermaid.js.org/) dependency graph you can include in your Markdown documents (either Github- or Gitlab-flavoured markdown) use
+```
+> fpm-deps --mermaid -o depgraph.mmd
+```
+
+Alternatively, you can output a standalone HTML page:
+```
+> fpm-deps --mermaid html -o depgraph.html
+```
 
 ## Acknowledgments
 
