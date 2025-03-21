@@ -33,6 +33,8 @@ Alternatively, you can output a standalone HTML page:
 > fpm-deps --mermaid html -o depgraph.html
 ```
 
+The rendered output can be seen [here](https://ivan-pi.github.io/fpm-deps/depgraph.html).
+
 ## Acknowledgments
 
 Thanks to [@vmagnin](https://github.com/vmagnin) for early testing via the fpm plugin mechanism and for pointing me toward the existing cargo crates.
