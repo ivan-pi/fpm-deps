@@ -46,3 +46,12 @@ Thanks to [@vmagnin](https://github.com/vmagnin) for early testing via the fpm p
 - [PkgGraph.jl](https://github.com/tfiers/PkgGraph.jl)
 - [pipdeptree](https://pypi.org/project/pipdeptree/)
 - [conda-tree](https://github.com/conda-incubator/conda-tree)
+
+## ToDo list
+
+* browse option (see [`browse`](https://ninja-build.org/manual.html#_extra_tools) in ninja)
+* use style/colors to distinguish dependencies (local, git, registry)
+* customize nodes with other package information
+* offline mode (use only cached data)
+* library dependencies (link-time)
+* subgraph selection based on category/authors/...
