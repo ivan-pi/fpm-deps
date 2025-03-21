@@ -14,9 +14,15 @@ character(len=:), allocatable :: name
 character(len=128) :: buf
 
 ! Command-line options
-logical :: cmd_meta, cmd_tooltip, cmd_mermaid, cmd_url
+logical :: cmd_meta, cmd_tooltip, cmd_mermaid, cmd_url, cmd_html
 integer :: cmd_dpi, cmd_depth
 character(len=:), allocatable :: outfile, manifest_path, exclude
+
+! Data structures
+type(tree_t) :: tree
+logical, allocatable :: mask(:), ex(:), tmp(:)
+type(package_properties), allocatable :: props(:)
+
 
 ! FIXME: check any environment variables of interest
 
@@ -30,6 +36,7 @@ cmd_meta = .true.
 cmd_tooltip = .true.
 cmd_url = .true.
 cmd_mermaid = .false.
+cmd_html = .false.
 cmd_dpi = -1
 cmd_depth = -1
 outfile = '-'           ! Standard output
@@ -68,6 +75,8 @@ do while (k <= nargs)
         write(debug_unit,'(A,I0)') "cmd_depth = ", cmd_depth
     case('-M','--mermaid')
         cmd_mermaid = .true.
+    case('--html')
+        cmd_html = .true.
     case('--filter')
         write(error_unit,'(A)') "warning: --filter will be ignored"
     case('--exclude')
@@ -103,10 +112,7 @@ end do
 block
 
     type(config_t) :: package
-    type(tree_t) :: tree
     type(error_t), allocatable :: err
-    logical, allocatable :: mask(:), ex(:), tmp(:)
-    type(package_properties), allocatable :: props(:)
     integer :: i
 
 
@@ -190,9 +196,16 @@ block
     end if
 
     if (cmd_mermaid) then
-        call print_mermaid(unit,package%name,tree,mask,props, &
-            url=cmd_url, &
-            tooltip=cmd_tooltip)
+        if (cmd_html) then
+            block
+                use fpmdeps_html
+                call print_mermaid_html(unit,package%name,html_callback)
+            end block
+        else
+            call print_mermaid(unit,package%name,tree,mask,props, &
+                url=cmd_url, &
+                tooltip=cmd_tooltip)
+        end if
     else
         call print_graphviz(unit,package%name,tree,mask,props, &
             url=cmd_url, &
@@ -207,6 +220,16 @@ end block
 
 
 contains
+
+    subroutine html_callback(html_unit,name)
+    !    import mask, props, cmd_url, cmd_tooltip
+        integer, intent(in) :: html_unit
+        character(len=*), intent(in) :: name
+! FIXME: hacky way to pass properties via host association
+        call print_mermaid(html_unit,name,tree,mask,props, &
+            url=cmd_url, &
+            tooltip=cmd_tooltip)
+    end subroutine
 
     subroutine show_help()
 
@@ -367,15 +390,30 @@ prefix//" [--mermaid] [--dpi DPI] [--no-url] [--no-tooltip]", &
             write(unit,'(2X,"N",I0,A)') i,"["//dep(i)%name//"]"
         end do
 
-        if (url) then
-            ! Click URL links
-            do i = 1, n_nodes
-                if (.not. mask(i)) cycle
+        ! Click URL links
+        do i = 1, n_nodes
+            if (.not. mask(i)) cycle
+
+            attr = ''
+            if (url) then
                 if (allocated(props(i)%homepage)) then
-                    write(unit,'(2X,"click N",I0,1x,A)') i, qt(props(i)%homepage)
+                    attr = "href "//qt(props(i)%homepage)
+                else
+                    ! No click possible without homepage
+                    cycle
                 end if
-            end do
-        end if
+            end if
+            ! Mermaid expects to have both
+            if (url .and. tooltip) then
+                if (allocated(props(i)%description)) then
+                    attr = attr//" "//qt(props(i)%description)
+                end if
+            end if
+
+            write(unit,'(2X,"click N",I0,1x,A)') i, attr
+
+        end do
+
 
 ! FIXME: tooltip
 
