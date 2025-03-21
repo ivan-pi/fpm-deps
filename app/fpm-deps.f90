@@ -78,6 +78,8 @@ do while (k <= nargs)
         if (k < nargs) then
             call get_command_argument(k+1,buf)
             select case(trim(buf))
+            case('md','markdown')
+                k = k + 1
             case('html')
                 cmd_html = .true.
                 k = k + 1
@@ -252,7 +254,7 @@ contains
     write(output_unit,'(*(A,/))') &
 "Usage: "//name//" [-h] [--version] [-o OUTPUT] [--manifest_path PATH]", &
 prefix//" [--depth D] [--no-meta] [--exclude <comma_separated_list>]", &
-prefix//" [--mermaid [html]] [--dpi DPI] [--no-url] [--no-tooltip]", &
+prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
 "", &
 "Create a fpm project dependency graph in DOT language", &
 "", &
@@ -272,9 +274,10 @@ prefix//" [--mermaid [html]] [--dpi DPI] [--no-url] [--no-tooltip]", &
 " --exclude <comma_separated_list>", &
 "                   a list of packages to be excluded from the graph. use", &
 "                   of quotes is necessary for correct parsing", &
-" -M [html], --mermaid [html]", &
-"                   output graph using Mermaid flowchart syntax; if html is",&
-"                   present, create a standalone web-page", &
+" -M [{md,html}], --mermaid [{md,html}]", &
+"                   output graph using Mermaid flowchart syntax suitable for",&
+"                   includion in markdown (md) documents; if html is selected",&
+"                   create a standalone HTML document", &
 " --dpi <int>       dots-per-inch; useful when piping dot for bitmap output", &
 " --no-url          do not add the homepage URL to the nodes", &
 " --no-tooltip      add package description as tooltip; useful when converted", &
