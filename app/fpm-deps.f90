@@ -103,8 +103,6 @@ do while (k <= nargs)
                 name//": error: '"//trim(buf)//"' is not a valid --orientation {TB,BT,LR,RL}"
             stop 1
         end select
-    case('--html')
-        cmd_html = .true.
     case('--filter')
         write(error_unit,'(A)') "warning: --filter will be ignored"
     case('--exclude')
