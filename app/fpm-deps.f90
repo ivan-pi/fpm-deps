@@ -34,7 +34,7 @@ name = trim(buf)
 
 ! Default settings
 cmd_orientation = 'TB'
-cmd_meta = .true.
+cmd_meta = .true.           ! unused
 cmd_tooltip = .true.
 cmd_url = .true.
 cmd_mermaid = .false.
@@ -95,9 +95,11 @@ do while (k <= nargs)
         k = k + 1
         call get_command_argument(k,buf)
         select case(trim(buf))
-        case('TB','TD','BT','LR','RL')
+        case('TB','BT','LR','RL')
             cmd_orientation = buf(1:2)
-            if (cmd_orientation == 'TD') cmd_orientation = 'TB'
+        case('TD')
+            ! Mermaid allows this as an extra option
+            cmd_orientation = 'TB'
         case default
             write(error_unit,'(A)') &
                 name//": error: '"//trim(buf)//"' is not a valid --orientation {TB,BT,LR,RL}"
@@ -112,10 +114,8 @@ do while (k <= nargs)
         call get_command_argument(k,buf)
         exclude = trim(buf)
         !print *, exclude
-    case('--meta')
-        continue
-    case('--no-meta')
-        cmd_meta = .false.
+!    case('--no-meta')
+!        cmd_meta = .false.
     case('--no-tooltip')
         cmd_tooltip = .false.
     case('--no-url')
