@@ -19,6 +19,7 @@ public :: dependency_props
 public :: exclude_mask
 
 public :: print_deps
+public :: bfs_depth
 
 type, extends(package_config_t) :: config_t
 contains
@@ -376,5 +377,62 @@ contains
   end subroutine
 
 
+  subroutine bfs_traversal(tree,node_action,edge_action)
+    type(tree_t), intent(in) :: tree
+
+    interface
+      subroutine node_action(i)
+        integer, intent(in) :: i
+      end subroutine
+      subroutine edge_action(i,j)
+        integer, intent(in) :: i,j
+      end subroutine
+    end interface
+
+    optional :: edge_action
+    call bfs(tree%ndep,tree%ia,tree%ja,1)
+  contains
+    !> Assign depths using a breadth-first search
+    recursive subroutine bfs(n,ia,ja,i)
+        integer, intent(in) :: n, i
+        integer, intent(in) :: ia(n+1), ja(:)
+        integer :: j
+        call node_action(i)
+        ! Search the dependencies
+        do j = ia(i)+1, ia(i+1)-1
+            if (present(edge_action)) call edge_action(i,ja(j))
+            call bfs(n,ia,ja,i=ja(j))
+        end do
+    end subroutine
+  end subroutine
+
+
+  subroutine bfs_depth(tree,d)
+    type(tree_t), intent(in) :: tree
+    integer, intent(out) :: d(tree%ndep)
+
+    d = -1
+
+    call bfs_traversal(tree,node,edge)
+
+  contains
+
+    subroutine node(i)
+      integer, intent(in) :: i
+      ! Node already visited
+      if (d(i) >= 0) return
+      ! Root node
+      if (i == 1) d(i) = 0
+    end subroutine
+
+    subroutine edge(i,j)
+      integer, intent(in) :: i,j
+      if (d(j) < 0) then
+        ! Not visited yet, increment depth
+        d(j) = d(i) + 1
+      end if
+    end subroutine
+
+  end subroutine
 
 end module
