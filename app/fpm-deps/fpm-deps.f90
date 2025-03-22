@@ -9,6 +9,8 @@ use fpm_error, only: error_t
 
 implicit none
 
+character(len=*), parameter :: version_str = "fpm-deps version 0.2.1"
+
 integer :: nargs, k, unit, debug_unit
 character(len=:), allocatable :: name
 character(len=128) :: buf
@@ -124,7 +126,7 @@ do while (k <= nargs)
         call show_help
         stop 0
     case('--version')
-        write(output_unit,'(A)') "fpm-deps version 0.1.0"
+        write(output_unit,'(A)') version_str
         stop
     case default
         write(error_unit,'(A)') name//": error: invalid option -- "//trim(buf)
