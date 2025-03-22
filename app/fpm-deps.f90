@@ -270,8 +270,9 @@ contains
 
     write(output_unit,'(*(A,/))') &
 "Usage: "//name//" [-h] [--version] [-o OUTPUT] [--manifest_path PATH]", &
-prefix//" [--depth D] [--no-meta] [--exclude <comma_separated_list>]", &
+prefix//" [--depth D] [--exclude <comma_separated_list>]", &
 prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
+prefix//" [--orientation {TB,BT,LR,RL}]", &
 "", &
 "Create a fpm project dependency graph in DOT language", &
 "", &
@@ -287,7 +288,7 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
 "                   show the full dependency tree. use --depth 1 to show the", &
 "                   direct dependencies", &
 !" -a, --all         show all dependencies, including app, test, and examples", &
-" --no-meta         ignore meta-dependencies in dependency graph", &
+!" --no-meta         ignore meta-dependencies in dependency graph", &
 " --exclude <comma_separated_list>", &
 "                   a list of packages to be excluded from the graph. use", &
 "                   of quotes is necessary for correct parsing", &
@@ -299,8 +300,8 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
 " --no-url          do not add the homepage URL to the nodes", &
 " --no-tooltip      add package description as tooltip; useful when converted", &
 "                   to SVG using dot or in case of Mermaid output", &
-" --orientation     the graph orientation (valid options are TB, BT, RL, LR)", &
-"                   default orientation is TB", &
+" --orientation {TB,BT,LR,RL}", &
+"                   the graph orientation; if absent the default is TB", &
 "", &
 "By default output is written to standard output and can be processed", &
 "using the dot command. Example:", &
