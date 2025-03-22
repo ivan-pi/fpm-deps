@@ -4,7 +4,7 @@ use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
 
 use fpm_deps, only: config_t, tree_t, new_tree, &
     package_properties, dependency_props, &
-    exclude_mask
+    exclude_mask, print_deps
 use fpm_error, only: error_t
 
 implicit none
@@ -70,10 +70,6 @@ do while (k <= nargs)
         k = k + 1
         call get_command_argument(k,buf)
         read(buf,*) cmd_depth
-        if (cmd_depth < 0) then
-            write(error_unit,'(A)') name//": error: depth must be non-negative"
-            stop 1
-        end if
         write(debug_unit,'(A,I0)') "cmd_depth = ", cmd_depth
     case('-M','--mermaid')
         cmd_mermaid = .true.
@@ -170,11 +166,15 @@ block
 
     ! Mask nodes based on depth
     allocate(mask(size(tree%dep)))
-    if (cmd_depth > 0) then
-        call recurse(tree,cmd_depth,mask)
-    else
+    if (cmd_depth < 0) then
         mask = .true.
+    else
+        call recurse(tree,cmd_depth,mask)
     end if
+
+    !if (cmd_depth == 0)
+    !call print_deps(tree,merge(huge(cmd_depth),cmd_depth,cmd_depth == 0))
+    !stop
 
     ! Mask nodes for exclusion
     if (allocated(exclude)) then
@@ -283,9 +283,9 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
 " --manifest_path <toml-file>", &
 "                   path to a valid fpm toml file; by default we look", &
 "                   in the current directory", &
-" -d, --depth <d>   dependency depth to consider during output; --depth 1", &
-"                   will show only direct dependencies. use --depth 0 to", &
-"                   obtain the full depth", &
+" -d, --depth <d>   dependency depth to consider during output; if negative", &
+"                   show the full dependency tree. use --depth 1 to show the", &
+"                   direct dependencies", &
 !" -a, --all         show all dependencies, including app, test, and examples", &
 " --no-meta         ignore meta-dependencies in dependency graph", &
 " --exclude <comma_separated_list>", &
@@ -312,21 +312,6 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
 "  https://github.com/ivan-pi/fpmdeps"
 
     end subroutine
-
-    subroutine print_dep(tree)
-        type(tree_t), intent(in) :: tree
-        integer :: i
-        do i = 1, tree%ndep
-            associate(dep => tree%dep(i))
-            !print *, i, allocated(dep%dependency), allocated(dep%dev_dependency), dep%name
-            end associate
-        end do
-        stop
-
-    end subroutine
-
-
-
 
 
     ! Output dependency graph using the Graphviz DOT language
@@ -490,7 +475,7 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
         d = -1
 
         ! Set the depth of the root node
-        d(1) = 1
+        d(1) = 0
 
         ! Traverse the assigning depths to the nodes starting from the root.
         call bfs(tree%ndep,tree%ia,tree%ja,d,1)
@@ -513,7 +498,7 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
                 ! If the node has not been visited yet assign the
                 ! depth and continue the search
                 depth(ja(j)) = depth(k) + 1
-                if (j <= n) call bfs(n,ia,ja,depth,k=j)
+                call bfs(n,ia,ja,depth,k=ja(j))
             end if
         end do
 
@@ -548,10 +533,11 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
         do j = ia(k)+1, ia(k+1)-1
             if (d(ja(j)) .eqv. ex(ja(j))) then
                 c(ja(j)) = .true.
-                if (j <= n) call bfs_mask(n,ia,ja,d,ex,c,k=j)
+                call bfs_mask(n,ia,ja,d,ex,c,k=ja(j))
             end if
         end do
 
     end subroutine
+
 
 end program fpmdeps

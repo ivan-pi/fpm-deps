@@ -18,6 +18,8 @@ public :: dependency_props
 
 public :: exclude_mask
 
+public :: print_deps
+
 type, extends(package_config_t) :: config_t
 contains
     procedure :: init_from_file
@@ -285,5 +287,94 @@ contains
     ! FIXME: warning about packages not found
 
   end function
+
+  !> Print a command-line dependency tree up to a certain depth
+  subroutine print_deps(tree, max_depth)
+    type(tree_t), intent(in) :: tree
+    integer, intent(in), optional :: max_depth
+
+    logical :: visited(tree%ndep)
+
+    ! The use of stack to track the padding is described in the
+    ! following blog-post (kind thanks to Lúcás C. Meier!):
+    !   https://cronokirby.com/posts/2020/12/a-unix-tree-algorithm/
+    integer, parameter :: STACK_DEPTH = 100
+    logical :: stack(STACK_DEPTH)
+    integer :: p
+    integer :: max_depth_
+
+    max_depth_ = huge(p)
+    if (present(max_depth)) max_depth_ = max_depth
+
+    visited = .false.
+    p = 0
+
+    call bfs_print(tree%ndep,tree%ia,tree%ja,tree%dep,visited, &
+        k=1,last=.true.,stack=stack,p=p)
+
+  contains
+
+    recursive subroutine bfs_print(n,ia,ja,dep,visited,k,last,stack,p)
+      use fpm_dependency, only: dependency_node_t
+      use, intrinsic :: iso_fortran_env, only: error_unit
+      integer, intent(in) :: n, k
+      integer, intent(in) :: ia(n+1), ja(:)
+      type(dependency_node_t), intent(in) :: dep(n)
+      logical, intent(inout) :: visited(n)
+      logical, intent(in) :: last
+
+      logical, intent(inout) :: stack(STACK_DEPTH)
+      integer, intent(inout) :: p
+
+      integer :: j
+
+      if (p > max_depth_) return
+
+      if (p > 0) then
+        do j = 1, p-1
+          if (stack(j)) then
+            write(*,'(A)',advance='no') '    '
+          else
+            write(*,'(A)',advance='no') '│   '
+          end if
+        end do
+        write(*,'(A)',advance='no') merge('└── ','├── ',last)
+      end if
+
+      if (.not. visited(k)) then
+        write(*,'(A)') dep(k)%name
+        visited(k) = .true.
+      else
+        write(*,'(A," (*)")') dep(k)%name
+        return
+      end if
+
+      do j = ia(k)+1, ia(k+1)-1
+
+        ! push
+        p = p + 1
+        if (p > size(stack)) then
+          write(error_unit,'(*(A,/))') &
+            "bfs_print: stack overflow", &
+            "  plese open a bug report along with the conditions", &
+            "  it occured under"
+          stop 3
+        end if
+
+        ! Is the next last?
+        stack(p) = j == ia(k+1)-1
+
+        call bfs_print(n,ia,ja,dep,visited, &
+            k=ja(j),last=(stack(p)),stack=stack,p=p)
+
+        ! pop
+        p = p - 1
+
+      end do
+    end subroutine
+
+  end subroutine
+
+
 
 end module
