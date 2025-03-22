@@ -1,10 +1,10 @@
-program fpmdeps
+program fpm_deps_main
 
 use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
 
 use fpm_deps, only: config_t, tree_t, new_tree, &
     package_properties, dependency_props, &
-    exclude_mask, print_deps
+    exclude_mask, print_deps, bfs_depth
 use fpm_error, only: error_t
 
 implicit none
@@ -172,9 +172,18 @@ block
         call recurse(tree,cmd_depth,mask)
     end if
 
-    !if (cmd_depth == 0)
-    !call print_deps(tree,merge(huge(cmd_depth),cmd_depth,cmd_depth == 0))
-    !stop
+    !block
+    !    integer :: i, d(tree%ndep)
+    !    call bfs_depth(tree,d)
+    !    do i = 1, tree%ndep
+    !        print *, i, d(i), tree%dep(i)%name
+    !    end do
+    !    stop
+    !end block
+
+
+    call print_deps(tree)
+    stop
 
     ! Mask nodes for exclusion
     if (allocated(exclude)) then
@@ -536,5 +545,4 @@ prefix//" [--orientation {TB,BT,LR,RL}]", &
 
     end subroutine
 
-
-end program fpmdeps
+end program fpm_deps_main
