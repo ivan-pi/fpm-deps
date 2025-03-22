@@ -321,7 +321,7 @@ prefix//" [--orientation {TB,BT,LR,RL}]", &
 "   > fpmdeps -o graph.gv", &
 "", &
 "Please report any errors encountered by opening a new issue at", &
-"  https://github.com/ivan-pi/fpmdeps"
+"  https://github.com/ivan-pi/fpm-deps"
 
     end subroutine
 
