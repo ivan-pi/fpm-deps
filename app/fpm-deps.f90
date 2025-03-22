@@ -50,7 +50,7 @@ do while (k <= nargs)
     call get_command_argument(k,buf)
     ! FIXME: graceful exit on error
 
-    select case(trim(buf))
+    parse_arg: select case(trim(buf))
     case('-o','--output')
         k = k + 1
         call get_command_argument(k,buf)
@@ -82,7 +82,10 @@ do while (k <= nargs)
                 cmd_html = .true.
                 k = k + 1
             case default
-                if (buf(1:1) == '-') cycle
+                if (buf(1:1) == '-') then
+                    ! Next item looks like an argument
+                    exit parse_arg
+                end if
                 write(error_unit,'(A)') &
                     name//": error: "//trim(buf)//" is not a valid option for --mermaid (-M)"
                 stop 1
@@ -129,8 +132,7 @@ do while (k <= nargs)
         write(error_unit,'(A)') name//": error: invalid option -- "//trim(buf)
         write(error_unit,'(A)') "Try '"//name//" --help' for more information."
         stop 1
-    end select
-
+    end select parse_arg
     k = k + 1
 end do
 
@@ -420,28 +422,24 @@ prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
         do i = 1, n_nodes
             if (.not. mask(i)) cycle
 
-            attr = ''
+            attr = 'href '
             if (url) then
                 if (allocated(props(i)%homepage)) then
-                    attr = "href "//qt(props(i)%homepage)
+                    attr = attr//qt(props(i)%homepage)
                 else
                     ! No click possible without homepage
                     cycle
                 end if
-            end if
-            ! Mermaid expects to have both
-            if (url .and. tooltip) then
-                if (allocated(props(i)%description)) then
-                    attr = attr//" "//qt(props(i)%description)
+                if (tooltip) then
+                    if (allocated(props(i)%description)) then
+                        attr = attr//" "//qt(props(i)%description)
+                    end if
                 end if
             end if
 
             write(unit,'(2X,"click N",I0,1x,A)') i, attr
 
         end do
-
-
-! FIXME: tooltip
 
         ! Edges
         associate(ia => tree%ia, ja => tree%ja)
