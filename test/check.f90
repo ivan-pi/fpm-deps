@@ -8,7 +8,20 @@ call diamond_graph
 call diamond_graph_2
 call pyramid_graph
 
+print *, "Tests PASSED."
+
 contains
+
+  subroutine do_check(depth,expected,test)
+    integer, intent(in) :: depth(:), expected(:)
+    character(len=*), intent(in) :: test
+    if (any(depth /= expected)) then
+      print *, "got:      ", depth
+      print *, "expected: ", expected
+      error stop test
+    end if
+  end subroutine
+
   subroutine fpm_deps_graph
 
 
@@ -33,8 +46,9 @@ contains
                               6, 3, &    ! May break if sorting is introduced
                                  7 ]
 
-    associate(depth => dependency_depth(tree))
-        if (any(depth /= [0,1,2,2,2,2,2])) error stop "fpm_deps_graph"
+    associate(depth => dependency_depth(tree), &
+              expected => [0,1,2,2,2,2,2])
+      call do_check(depth,expected,"fpm_deps_graph")
     end associate
 
   end subroutine
@@ -60,8 +74,9 @@ contains
                             5, 3, & ! May break if sorting is introduced
                                6  ]
 
-    associate(depth => dependency_depth(tree))
-        if (any(depth /= [0,1,1,1,1,1])) error stop "fpm_graph"
+    associate(depth => dependency_depth(tree), &
+              expected => [0,1,1,1,1,1])
+      call do_check(depth,expected,"fpm_graph")
     end associate
 
   end subroutine
@@ -84,8 +99,9 @@ contains
                         3, 4, &
                            4 ]
 
-      associate(depth => dependency_depth(tree))
-          if (any(depth /= [0,1,1,2])) error stop "diamond_graph"
+      associate(depth => dependency_depth(tree), &
+                expected => [0,1,1,2])
+        call do_check(depth,expected,"diamond_graph")
       end associate
   end subroutine
 
@@ -108,8 +124,9 @@ contains
                            4,    &
                               5 ]
 
-      associate(depth => dependency_depth(tree))
-          if (any(depth /= [0,1,1,2,2])) error stop "diamond_graph_2"
+      associate(depth => dependency_depth(tree), &
+                expected => [0,1,1,2,2])
+        call do_check(depth,expected,"diamond_graph_2")
       end associate
   end subroutine
 
@@ -135,12 +152,8 @@ contains
                   6]
 
       associate(depth => dependency_depth(tree), &
-          expected => [0,1,1,2,2,2])
-          if (any(depth /= expected)) then
-            print *, "got:      ", depth
-            print *, "expected: ", expected
-            error stop "pyramid_graph"
-          end if
+                expected => [0,1,1,2,2,2])
+        call do_check(depth,expected,"pyramid_graph")
       end associate
   end subroutine
 

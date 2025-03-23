@@ -297,14 +297,15 @@ contains
 
       integer :: j
 
-      depth(k) = d
+      if (depth(k) >= 0) then
+        depth(k) = min(depth(k), d)
+      else
+        depth(k) = d
+      end if
 
       ! Search the dependencies
       do j = ia(k)+1, ia(k+1)-1
-        if (depth(ja(j)) < 0) then
-          ! Only continue the search if not visited yet
-          call bfs(n,ia,ja,depth,d=d+1,k=ja(j))
-        end if
+        call bfs(n,ia,ja,depth,d=d+1,k=ja(j))
       end do
 
     end subroutine
