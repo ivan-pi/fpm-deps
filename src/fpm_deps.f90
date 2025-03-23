@@ -288,7 +288,34 @@ contains
 
   contains
 
+    ! Assign depth using a breadth-first traversal
+    subroutine bfs(n,ia,ja,depth)
+      integer, intent(in) :: n
+      integer, intent(in) :: ia(n+1), ja(:)
+      integer, intent(out) :: depth(n)
+
+      integer :: k, j
+
+      ! Root node
+      depth(1) = 0
+
+      ! N.b. this traversal is only correct, because of the way
+      ! the fpm dependencies are resolved, meaning that neighbors
+      ! have been encountered already.
+
+      do k = 1, n
+        associate(d => depth(k))
+        do j = ia(k), ia(k+1)-1
+          if (depth(ja(j)) < 0) depth(ja(j)) = d + 1
+        end do
+        end associate
+      end do
+
+    end subroutine
+
     !> Assign depths using a depth-first search
+    !> This is less efficient because the nodes are revisited over
+    !> and over again.
     recursive subroutine dfs(n,ia,ja,depth,d,k)
       integer, intent(in) :: n, k, d
       integer, intent(in) :: ia(n+1), ja(:)
@@ -305,27 +332,6 @@ contains
       ! Search the dependencies
       do j = ia(k)+1, ia(k+1)-1
         call dfs(n,ia,ja,depth,d=d+1,k=ja(j))
-      end do
-
-    end subroutine
-
-    ! Assign depth using a breadth-first traversal
-    subroutine bfs(n,ia,ja,depth)
-      integer, intent(in) :: n
-      integer, intent(in) :: ia(n+1), ja(:)
-      integer, intent(out) :: depth(n)
-
-      integer :: k, j
-
-      ! Root node
-      depth(1) = 0
-
-      do k = 1, n
-        associate(d => depth(k))
-        do j = ia(k), ia(k+1)-1
-          if (depth(ja(j)) < 0) depth(ja(j)) = d + 1
-        end do
-        end associate
       end do
 
     end subroutine
@@ -377,12 +383,12 @@ contains
     visited = .false.
     p = 0
 
-    call bfs_print(tree%ndep,tree%ia,tree%ja,tree%dep,visited, &
+    call dfs_print(tree%ndep,tree%ia,tree%ja,tree%dep,visited, &
         k=1,last=.true.,stack=stack,p=p)
 
   contains
 
-    recursive subroutine bfs_print(n,ia,ja,dep,visited,k,last,stack,p)
+    recursive subroutine dfs_print(n,ia,ja,dep,visited,k,last,stack,p)
       use fpm_dependency, only: dependency_node_t
       use, intrinsic :: iso_fortran_env, only: error_unit
       integer, intent(in) :: n, k
@@ -423,7 +429,7 @@ contains
         p = p + 1
         if (p > size(stack)) then
           write(error_unit,'(*(A,/))') &
-            "bfs_print: stack overflow", &
+            "dfs_print: stack overflow", &
             "  plese open a bug report along with the conditions", &
             "  it occured under"
           stop 3
@@ -432,7 +438,7 @@ contains
         ! Is the next last?
         stack(p) = j == ia(k+1)-1
 
-        call bfs_print(n,ia,ja,dep,visited, &
+        call dfs_print(n,ia,ja,dep,visited, &
             k=ja(j),last=(stack(p)),stack=stack,p=p)
 
         ! pop
@@ -444,7 +450,7 @@ contains
   end subroutine
 
 
-  subroutine bfs_traversal(tree,node_action,edge_action)
+  subroutine dfs_traversal(tree,node_action,edge_action)
     type(tree_t), intent(in) :: tree
 
     interface
@@ -457,10 +463,10 @@ contains
     end interface
 
     optional :: edge_action
-    call bfs(tree%ndep,tree%ia,tree%ja,1)
+    call dfs(tree%ndep,tree%ia,tree%ja,1)
   contains
-    !> Assign depths using a breadth-first search
-    recursive subroutine bfs(n,ia,ja,i)
+    !> Assign depths using a depth-first search
+    recursive subroutine dfs(n,ia,ja,i)
         integer, intent(in) :: n, i
         integer, intent(in) :: ia(n+1), ja(:)
         integer :: j
@@ -474,13 +480,13 @@ contains
   end subroutine
 
 
-  subroutine bfs_depth(tree,d)
+  subroutine dfs_depth(tree,d)
     type(tree_t), intent(in) :: tree
     integer, intent(out) :: d(tree%ndep)
 
     d = -1
 
-    call bfs_traversal(tree,node,edge)
+    call dfs_traversal(tree,node,edge)
 
   contains
 
