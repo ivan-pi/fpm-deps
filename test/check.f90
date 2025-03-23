@@ -13,6 +13,7 @@ call forsolver_graph
 call depth6_graph
 call depth3_graph
 call halo_graph
+call simple_cycle_graph
 
 print *, "Tests PASSED."
 
@@ -357,8 +358,50 @@ contains
 
     associate(depth => dependency_depth(tree), &
               expected => [0,1,1,1,2,1,1,1,1,1,2,2,2,2,1,1])
-      call do_check(depth,expected,"depth3_graph")
+      call do_check(depth,expected,"halo_graph")
     end associate
+  end subroutine
+
+
+  subroutine simple_cycle_graph
+
+    !   1 -> 2
+    !   1 -> 3
+    !   2 -> 3
+    !   3 -> 2
+
+    type(tree_t) :: tree
+    tree%ndep = 3
+    tree%ia = [1, 4, 6, 8]
+    tree%ja = [1, 2, 3, &
+               2, 3, &
+               3, 2]
+
+    associate(depth => dependency_depth(tree), &
+              expected => [0,1,1])
+      call do_check(depth,expected,"simple_cycle_graph")
+    end associate
+
+  end subroutine
+
+
+  subroutine tricycle_graph
+
+    !   1 -> 2 -> 3 -> 1
+    !
+
+    type(tree_t) :: tree
+    tree%ndep = 3
+    tree%ia = [1, 3, 5, 7]
+    tree%ja = [1, 2, &
+               2, 3, &
+               3, 1]
+
+    associate(depth => dependency_depth(tree), &
+              expected => [0,1,1])
+      call do_check(depth,expected,"tricycle_graph")
+    end associate
+
   end subroutine
 
 end program check
