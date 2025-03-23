@@ -10,6 +10,8 @@ call pyramid_graph
 call matcha_graph
 call dftd4_fit_graph
 call forsolver_graph
+call depth6_graph
+call depth3_graph
 
 print *, "Tests PASSED."
 
@@ -266,6 +268,48 @@ contains
       call do_check(depth,expected,"forsolver_graph")
     end associate
 
+  end subroutine
+
+  subroutine depth6_graph
+
+    ! A linear graph
+    ! 1 -> 2 -> 3 -> 4 -> 5 -> 6
+
+    type(tree_t) :: tree
+    tree%ndep = 6
+    tree%ia = [ 1, 3, 5, 7, 9, 11, 12]
+    tree%ja = [ 1, 2, &
+                2, 3, &
+                3, 4, &
+                4, 5, &
+                5, 6, &
+                6]
+
+    associate(depth => dependency_depth(tree), &
+              expected => [0,1,2,3,4,5])
+      call do_check(depth,expected,"depth6_graph")
+    end associate
+  end subroutine
+
+  subroutine depth3_graph
+
+    ! 1 -> 2 -> 3 -> 4 -> 5 -> 6
+    ! 1 -> 4
+
+    type(tree_t) :: tree
+    tree%ndep = 6
+    tree%ia = [ 1, 4, 6, 8, 10, 12, 13]
+    tree%ja = [ 1, 2, 4, &
+                2, 3, &
+                3, 4, &
+                4, 5, &
+                5, 6, &
+                6]
+
+    associate(depth => dependency_depth(tree), &
+              expected => [0,1,2,1,2,3])
+      call do_check(depth,expected,"depth3_graph")
+    end associate
   end subroutine
 
 end program check
