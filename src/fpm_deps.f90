@@ -281,31 +281,52 @@ contains
     depth = -1
 
     ! Traverse the assigning depths to the nodes starting from the root.
-    call bfs(tree%ndep,tree%ia,tree%ja,depth,d=0,k=1)
+!    call dfs(tree%ndep,tree%ia,tree%ja,depth,d=0,k=1)
 
+    call bfs(tree%ndep,tree%ia,tree%ja,depth)
     !do k = 1, tree%ndep
     !    print *, k, depth(k), tree%dep(k)%name
     !end do
 
   contains
 
-    !> Assign depths using a breadth-first search
-    recursive subroutine bfs(n,ia,ja,depth,d,k)
+    !> Assign depths using a depth-first search
+    recursive subroutine dfs(n,ia,ja,depth,d,k)
       integer, intent(in) :: n, k, d
       integer, intent(in) :: ia(n+1), ja(:)
       integer, intent(inout) :: depth(n)
 
       integer :: j
 
-      if (depth(k) >= 0) then
-        depth(k) = min(depth(k), d)
-      else
+      if (depth(k) < 0) then
         depth(k) = d
+      else
+        depth(k) = min(depth(k), d)
       end if
 
       ! Search the dependencies
       do j = ia(k)+1, ia(k+1)-1
-        call bfs(n,ia,ja,depth,d=d+1,k=ja(j))
+        call dfs(n,ia,ja,depth,d=d+1,k=ja(j))
+      end do
+
+    end subroutine
+
+    subroutine bfs(n,ia,ja,depth)
+      integer, intent(in) :: n
+      integer, intent(in) :: ia(n+1), ja(:)
+      integer, intent(out) :: depth(n)
+
+      integer :: k, j
+
+      ! Root node
+      depth(1) = 0
+
+      do k = 1, n
+        do j = ia(k)+1,ia(k+1)-1
+          associate(jj => ja(j))
+            if (depth(jj) < 0) depth(jj) = depth(k) + 1
+          end associate
+        end do
       end do
 
     end subroutine
