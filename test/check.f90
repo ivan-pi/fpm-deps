@@ -12,6 +12,7 @@ call dftd4_fit_graph
 call forsolver_graph
 call depth6_graph
 call depth3_graph
+call halo_graph
 
 print *, "Tests PASSED."
 
@@ -21,8 +22,8 @@ contains
     integer, intent(in) :: depth(:), expected(:)
     character(len=*), intent(in) :: test
     if (any(depth /= expected)) then
-      print *, "got:      ", depth
-      print *, "expected: ", expected
+      print '(A,*(I3))', "got:      ", depth
+      print '(A,*(I3))', "expected: ", expected
       error stop test
     end if
   end subroutine
@@ -308,6 +309,54 @@ contains
 
     associate(depth => dependency_depth(tree), &
               expected => [0,1,2,1,2,3])
+      call do_check(depth,expected,"depth3_graph")
+    end associate
+  end subroutine
+
+
+  subroutine halo_graph
+
+    ! Halo project (as on 23.03.2025)
+    ! https://github.com/jacobwilliams/halo
+
+    !  1 halo
+    !  2   fortran-astrodynamics-toolkit
+    !  3   NumDiff
+    !  4   ddeabm
+    !  5     roots-fortran
+    !  6   json-fortran
+    !  7   bspline-fortran
+    !  8   pyplot-fortran
+    !  9   fortran-search-and-sort
+    ! 10   nlesolver-fortran
+    ! 11     fmin
+    ! 12     LSQR
+    ! 13     lusol
+    ! 14     LSMR
+    ! 15   argv-fortran
+    ! 16   simulated-annealing
+
+    type(tree_t) :: tree
+    tree%ndep = 16
+    tree%ia = [ 1, 12, 13, 14, 16, 17, 18, 19, 20, 25, 26, 27, 28, 29, 30, 31]
+    tree%ja = [ 1, 2, 3, 4, 6, 7, 8, 9, 10, 15, 16, &
+                2, &
+                3, &
+                4, 5, &
+                6, &
+                7, &
+                8, &
+                9, &
+               10, 11, 12, 13, 14, &
+               11, &
+               12, &
+               13, &
+               14, &
+               15, &
+               16]
+
+    associate(depth => dependency_depth(tree), &
+              expected => [0,1,1,1,2,1,1,1,1,1,2,2,2,2,1,1])
       call do_check(depth,expected,"depth3_graph")
     end associate
   end subroutine
