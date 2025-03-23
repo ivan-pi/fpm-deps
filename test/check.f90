@@ -9,6 +9,7 @@ call diamond_graph_2
 call pyramid_graph
 call matcha_graph
 call dftd4_fit_graph
+call forsolver_graph
 
 print *, "Tests PASSED."
 
@@ -230,6 +231,39 @@ contains
     associate(depth => dependency_depth(tree), &
               expected => [0,1,2,1,2,1,1])
       call do_check(depth,expected,"dftd4_fit_graph")
+    end associate
+
+  end subroutine
+
+
+  subroutine forsolver_graph
+
+    ! forsolver (as on 23.03.2025)
+    ! https://github.com/gha3mi/forsolver
+
+    ! 1 forsolver
+    ! 2   kinds
+    ! 3   fordiff
+    !       kinds (*)
+    ! 4     forunittest
+    !     forunittest (*)
+    !       kinds (*)
+    ! 5     FACE
+
+    type(tree_t) :: tree
+
+    tree%ndep = 5
+
+    tree%ia = [ 1, 5, 6, 9, 12, 13  ]
+    tree%ja = [ 1, 2, 3, 4, &
+                2, &
+                3, 2, 4, &
+                4, 2, 5, &
+                5]
+
+    associate(depth => dependency_depth(tree), &
+              expected => [0,1,1,1,2])
+      call do_check(depth,expected,"forsolver_graph")
     end associate
 
   end subroutine
