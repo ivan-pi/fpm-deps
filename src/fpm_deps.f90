@@ -15,6 +15,7 @@ public :: tree_t, new_tree
 
 public :: package_properties
 public :: dependency_props
+public :: dependency_depth
 
 public :: exclude_mask
 
@@ -265,6 +266,51 @@ contains
       call get_value(table, "homepage", props%homepage)
 
   end function
+
+
+  ! Mask the dependencies which should remain part of the output
+  function dependency_depth(tree) result(depth)
+    type(tree_t), intent(in) :: tree
+
+    ! The number of dependencies should fit in an automatic array
+    ! This could potentially break with a very large dependency tree
+    ! but we assume that is unlikely.
+    integer :: depth(tree%ndep), k
+
+    ! Mark all nodes as unvisitied
+    depth = -1
+
+    ! Traverse the assigning depths to the nodes starting from the root.
+    call bfs(tree%ndep,tree%ia,tree%ja,depth,d=0,k=1)
+
+    !do k = 1, tree%ndep
+    !    print *, k, depth(k), tree%dep(k)%name
+    !end do
+
+  contains
+
+    !> Assign depths using a breadth-first search
+    recursive subroutine bfs(n,ia,ja,depth,d,k)
+      integer, intent(in) :: n, k, d
+      integer, intent(in) :: ia(n+1), ja(:)
+      integer, intent(inout) :: depth(n)
+
+      integer :: j
+
+      depth(k) = d
+
+      ! Search the dependencies
+      do j = ia(k)+1, ia(k+1)-1
+        if (depth(ja(j)) < 0) then
+          ! Only continue the search if not visited yet
+          call bfs(n,ia,ja,depth,d=d+1,k=ja(j))
+        end if
+      end do
+
+    end subroutine
+
+ end function
+
 
   !> Create a logical mask out of the user-specified exclude string
   !>

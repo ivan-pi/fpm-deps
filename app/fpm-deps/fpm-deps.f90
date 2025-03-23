@@ -3,7 +3,7 @@ program fpm_deps_main
 use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
 
 use fpm_deps, only: config_t, tree_t, new_tree, &
-    package_properties, dependency_props, &
+    package_properties, dependency_props, dependency_depth, &
     exclude_mask, print_deps, bfs_depth
 use fpm_error, only: error_t
 
@@ -18,7 +18,7 @@ character(len=128) :: buf
 ! Command-line options
 logical :: cmd_meta, cmd_tooltip, cmd_mermaid, cmd_url, cmd_html
 integer :: cmd_dpi, cmd_depth
-character(len=2) :: cmd_orientation
+character(len=2) :: cmd_rankdir
 character(len=:), allocatable :: outfile, manifest_path, exclude
 
 ! Data structures
@@ -35,7 +35,7 @@ call get_command_argument(0,buf) ! use program name for friendly output
 name = trim(buf)
 
 ! Default settings
-cmd_orientation = 'TB'
+cmd_rankdir = 'TB'
 cmd_meta = .true.           ! unused
 cmd_tooltip = .true.
 cmd_url = .true.
@@ -93,18 +93,18 @@ do while (k <= nargs)
                 stop 1
             end select
         end if
-    case('--orientation')
+    case('--rankdir')
         k = k + 1
         call get_command_argument(k,buf)
         select case(trim(buf))
         case('TB','BT','LR','RL')
-            cmd_orientation = buf(1:2)
+            cmd_rankdir = buf(1:2)
         case('TD')
             ! Mermaid allows this as an extra option
-            cmd_orientation = 'TB'
+            cmd_rankdir = 'TB'
         case default
             write(error_unit,'(A)') &
-                name//": error: '"//trim(buf)//"' is not a valid --orientation {TB,BT,LR,RL}"
+                name//": error: '"//trim(buf)//"' is not a valid --rankdir {TB,BT,LR,RL}"
             stop 1
         end select
     case('--filter')
@@ -171,7 +171,8 @@ block
     if (cmd_depth < 0) then
         mask = .true.
     else
-        call recurse(tree,cmd_depth,mask)
+        !call recurse(tree,cmd_depth,mask)
+        mask = dependency_depth(tree) <= cmd_depth
     end if
 
     !block
@@ -184,8 +185,8 @@ block
     !end block
 
 
-    call print_deps(tree)
-    stop
+    !call print_deps(tree)
+    !stop
 
     ! Mask nodes for exclusion
     if (allocated(exclude)) then
@@ -245,14 +246,14 @@ block
             call print_mermaid(unit,package%name,tree,mask,props, &
                 url=cmd_url, &
                 tooltip=cmd_tooltip, &
-                orientation=cmd_orientation)
+                rankdir=cmd_rankdir)
         end if
     else
         call print_graphviz(unit,package%name,tree,mask,props, &
             url=cmd_url, &
             tooltip=cmd_tooltip, &
             dpi=cmd_dpi, &
-            orientation=cmd_orientation)
+            rankdir=cmd_rankdir)
     end if
 
     ! FIXME: flushed by default if open, can be removed
@@ -271,7 +272,7 @@ contains
         call print_mermaid(html_unit,name,tree,mask,props, &
             url=cmd_url, &
             tooltip=cmd_tooltip, &
-            orientation=cmd_orientation)
+            rankdir=cmd_rankdir)
     end subroutine
 
     subroutine show_help()
@@ -280,39 +281,37 @@ contains
     prefix = repeat(' ',len("Usage: "//name))
 
     write(output_unit,'(*(A,/))') &
-"Usage: "//name//" [-h] [--version] [-o OUTPUT] [--manifest_path PATH]", &
-prefix//" [--depth D] [--exclude <comma_separated_list>]", &
-prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
-prefix//" [--orientation {TB,BT,LR,RL}]", &
-"", &
 "Create a fpm project dependency graph in DOT language", &
 "", &
+"Usage: "//name//" [-h] [--version] [-o OUTPUT] [--manifest_path PATH]", &
+prefix//" [--depth DEPTH] [--exclude <LIST>]", &
+prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
+prefix//" [--rankdir {TB,BT,LR,RL}]", &
+"", &
 "options:", &
-" -h, --help        show this help message and exit", &
-" --version         show version string and exit", &
-" -o <file>, --output <file>", &
-"                   send graph output to a file instead of stdout", &
-" --manifest_path <toml-file>", &
-"                   path to a valid fpm toml file; by default we look", &
-"                   in the current directory", &
-" -d, --depth <d>   dependency depth to consider during output; if negative", &
-"                   show the full dependency tree. use --depth 1 to show the", &
-"                   direct dependencies", &
+" -h, --help            show this help message and exit", &
+"     --version         show version string and exit", &
+" -o, --output <FILE>   send graph output to a file instead of stdout", &
+"     --manifest-path <PATH>", &
+"                       path to a valid fpm toml file; by default we look", &
+"                       in the current directory", &
+" -d, --depth <DEPTH>       dependency depth to consider during output; if negative", &
+"                       show the full dependency tree. use --depth 1 to show the", &
+"                       direct dependencies", &
 !" -a, --all         show all dependencies, including app, test, and examples", &
 !" --no-meta         ignore meta-dependencies in dependency graph", &
-" --exclude <comma_separated_list>", &
-"                   a list of packages to be excluded from the graph. use", &
-"                   of quotes is necessary for correct parsing", &
-" -M [{md,html}], --mermaid [{md,html}]", &
-"                   output graph using Mermaid flowchart syntax suitable for",&
-"                   includion in markdown (md) documents; if html is selected",&
-"                   create a standalone HTML document", &
-" --dpi <int>       dots-per-inch; useful when piping dot for bitmap output", &
-" --no-url          do not add the homepage URL to the nodes", &
-" --no-tooltip      add package description as tooltip; useful when converted", &
-"                   to SVG using dot or in case of Mermaid output", &
-" --orientation {TB,BT,LR,RL}", &
-"                   the graph orientation; if absent the default is TB", &
+"     --exclude <LIST>  a comma-separated list of packages to be excluded from the graph. use", &
+"                       of quotes is necessary for correct parsing", &
+" -M, --mermaid [<FORMAT>]", &
+"                       output graph using Mermaid flowchart syntax suitable for",&
+"                       includion in markdown (md) documents; if html is selected",&
+"                       create a standalone HTML document", &
+"     --dpi <DPI>       dots-per-inch; useful when piping dot for bitmap output", &
+"     --no-url          do not add the homepage URL to the nodes", &
+"     --no-tooltip      add package description as tooltip; useful when converted", &
+"                       to SVG using dot or in case of Mermaid output", &
+"     --rankdir <RANKDIR>", &
+"                       direction of the graph layout: TB, BT, LR, RL [default: TB]", &
 "", &
 "By default output is written to standard output and can be processed", &
 "using the dot command. Example:", &
@@ -330,7 +329,7 @@ prefix//" [--orientation {TB,BT,LR,RL}]", &
     ! An overview of the syntax can be found at
     !     https://graphviz.org/doc/info/lang.html
     subroutine print_graphviz(unit, name, tree, mask, props, url, tooltip, &
-            dpi, orientation)
+            dpi, rankdir)
         integer, intent(in) :: unit
         character(len=*), intent(in) :: name
         type(tree_t), intent(in) :: tree
@@ -338,7 +337,7 @@ prefix//" [--orientation {TB,BT,LR,RL}]", &
         type(package_properties), intent(in) :: props(:)
         logical, intent(in) :: url, tooltip
         integer, intent(in) :: dpi
-        character(len=2), intent(in) :: orientation
+        character(len=2), intent(in) :: rankdir
 
         integer :: i, j, k
 
@@ -351,7 +350,7 @@ prefix//" [--orientation {TB,BT,LR,RL}]", &
 
         ! Preamble
         write(unit,'(A)') "strict digraph "//qt(name)//" {"
-        write(unit,'(2X,A)') 'rankdir="'//orientation//'"'
+        write(unit,'(2X,A)') 'rankdir="'//rankdir//'"'
         write(unit,'(2X,A)') 'node [ fontname = "Helvetica,Arial,sans-serif" ]'
         write(unit,'(2X,A)') 'edge [ fontname = "Helvetica,Arial,sans-serif" ]'
         if (dpi > 0) write(unit,'(2X,"graph [ dpi = ",I0," ]")') dpi
@@ -405,14 +404,14 @@ prefix//" [--orientation {TB,BT,LR,RL}]", &
     ! Output dependency graph using Mermaid flowchart syntax
     ! An overview of the syntax can be found at
     !     https://mermaid.js.org/syntax/flowchart.html
-    subroutine print_mermaid(unit,name,tree,mask,props,url,tooltip,orientation)
+    subroutine print_mermaid(unit,name,tree,mask,props,url,tooltip,rankdir)
         integer, intent(in) :: unit
         character(len=*), intent(in) :: name
         type(tree_t), intent(in) :: tree
         logical, intent(in) :: mask(:)
         type(package_properties), intent(in) :: props(:)
         logical, intent(in) :: url, tooltip
-        character(len=2), intent(in) :: orientation
+        character(len=2), intent(in) :: rankdir
 
         integer :: i, j, k
         character(len=:), allocatable :: attr
@@ -420,7 +419,7 @@ prefix//" [--orientation {TB,BT,LR,RL}]", &
         associate(n_nodes => size(tree%dep), dep => tree%dep)
 
         ! Preamble
-        write(unit,'(A)') "flowchart "//orientation
+        write(unit,'(A)') "flowchart "//rankdir
 
         ! Nodes
         do i = 1, n_nodes
@@ -467,55 +466,9 @@ prefix//" [--orientation {TB,BT,LR,RL}]", &
     end subroutine
 
 
-    ! Mask the dependencies which should remain part of the output
-    subroutine recurse(tree, max_depth, mask, ex)
-        type(tree_t), intent(in) :: tree
-        integer, intent(in) :: max_depth
-        logical, intent(out) :: mask(tree%ndep)
-        logical, intent(in), optional :: ex(tree%ndep)
-
-        ! The number of dependencies should fit in an automatic array
-        ! This could potentially break with a very large dependency tree
-        ! but we assume that is unlikely.
-        integer :: d(tree%ndep), k
-
-        ! Mark all nodes as unvisitied
-        d = -1
-
-        ! Set the depth of the root node
-        d(1) = 0
-
-        ! Traverse the assigning depths to the nodes starting from the root.
-        call bfs(tree%ndep,tree%ia,tree%ja,d,1)
-
-        mask = d <= max_depth
-
-    end subroutine
-
-    !> Assign depths using a breadth-first search
-    recursive subroutine bfs(n,ia,ja,depth,k)
-        integer, intent(in) :: n, k
-        integer, intent(in) :: ia(n+1), ja(:)
-        integer, intent(inout) :: depth(n)
-
-        integer :: j
-
-        ! Search the dependencies
-        do j = ia(k)+1, ia(k+1)-1
-            if (depth(ja(j)) < 0) then
-                ! If the node has not been visited yet assign the
-                ! depth and continue the search
-                depth(ja(j)) = depth(k) + 1
-                call bfs(n,ia,ja,depth,k=ja(j))
-            end if
-        end do
-
-    end subroutine
-
-
     !> Combine the depth mask and the excluded mask
     !>
-    !>   A bread-first search must be used to correctly propagate the
+    !>   A breadth-first search must be used to correctly propagate the
     !>   the mask values.
     !>
     subroutine combine_masks(tree,depth,ex,c)

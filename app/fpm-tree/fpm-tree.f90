@@ -18,6 +18,9 @@ logical, allocatable :: mask(:), ex(:), tmp(:)
 type(package_properties), allocatable :: props(:)
 character(len=:), allocatable :: manifest_path
 
+integer :: cmd_depth
+logical :: cmd_deduplicate
+
 integer :: debug_unit, nargs, blen, k
 character(len=1024) :: buf
 character(len=:), allocatable :: name
@@ -26,8 +29,12 @@ debug_unit = error_unit
 nargs = command_argument_count()
 call get_command_argument(0,buf,length=blen) ! use program name for friendly output
 name = buf(1:blen)
-
 print *, name
+
+! Default settings
+cmd_depth = -1
+cmd_deduplicate = .true.
+
 
 ! Process command-line arguments
 k = 1
@@ -42,6 +49,16 @@ do while (k <= nargs)
     case('-h','--help')
         call show_help
         stop 0
+    case('-d','--depth')
+        k = k + 1
+        call get_command_argument(k,buf,length=blen)
+        read(buf,*) cmd_depth
+        write(debug_unit,'(A,I0)') "cmd_depth = ", cmd_depth
+    case('--no-dedupe')
+        cmd_deduplicate = .false.
+!    case('--charset')
+!    case('--prefix')
+!    case('--flat')
     case default
         write(error_unit,'(A)') name//": error: invalid option -- "//buf(1:blen)
         write(error_unit,'(A)') "Try '"//name//" --help' for more information."
@@ -97,6 +114,8 @@ contains
 "options:", &
 " -h, --help        show this help message and exit", &
 " --version         show version string and exit", &
+" --charset {utf8,ascii}", &
+"                   chooses the character set to use for the tree.", &
 "", &
 "Please report any errors encountered by opening a new issue at", &
 "  https://github.com/ivan-pi/fpm-deps"
