@@ -164,29 +164,14 @@ block
         write(error_unit,'(A)') err%message
         error stop "building dependency tree failed"
     end if
-    !tree%ndeps = size(tree%dep)
 
     ! Mask nodes based on depth
     allocate(mask(size(tree%dep)))
     if (cmd_depth < 0) then
         mask = .true.
     else
-        !call recurse(tree,cmd_depth,mask)
         mask = dependency_depth(tree) <= cmd_depth
     end if
-
-    !block
-    !    integer :: i, d(tree%ndep)
-    !    call bfs_depth(tree,d)
-    !    do i = 1, tree%ndep
-    !        print *, i, d(i), tree%dep(i)%name
-    !    end do
-    !    stop
-    !end block
-
-
-    !call print_deps(tree)
-    !stop
 
     ! Mask nodes for exclusion
     if (allocated(exclude)) then
@@ -255,9 +240,6 @@ block
             dpi=cmd_dpi, &
             rankdir=cmd_rankdir)
     end if
-
-    ! FIXME: flushed by default if open, can be removed
-    if (unit /= output_unit) close(unit)
 
 end block
 
