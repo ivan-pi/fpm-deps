@@ -4,7 +4,7 @@ use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
 
 use fpm_deps, only: config_t, tree_t, new_tree, &
     package_properties, dependency_props, dependency_depth, &
-    exclude_mask, print_deps, bfs_depth
+    exclude_mask, print_deps
 use fpm_error, only: error_t
 
 implicit none
@@ -25,7 +25,6 @@ character(len=:), allocatable :: outfile, manifest_path, exclude
 type(tree_t) :: tree
 logical, allocatable :: mask(:), ex(:), tmp(:)
 type(package_properties), allocatable :: props(:)
-
 
 ! FIXME: check any environment variables of interest
 

@@ -20,7 +20,6 @@ public :: dependency_depth
 public :: exclude_mask
 
 public :: print_deps
-public :: bfs_depth
 
 type, extends(package_config_t) :: config_t
 contains
@@ -474,7 +473,7 @@ contains
         ! Search the dependencies
         do j = ia(i)+1, ia(i+1)-1
             if (present(edge_action)) call edge_action(i,ja(j))
-            call bfs(n,ia,ja,i=ja(j))
+            call dfs(n,ia,ja,i=ja(j))
         end do
     end subroutine
   end subroutine

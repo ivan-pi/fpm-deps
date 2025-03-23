@@ -8,6 +8,7 @@ call diamond_graph
 call diamond_graph_2
 call pyramid_graph
 call matcha_graph
+call dftd4_fit_graph
 
 print *, "Tests PASSED."
 
@@ -22,6 +23,7 @@ contains
       error stop test
     end if
   end subroutine
+
 
   subroutine fpm_deps_graph
 
@@ -55,6 +57,7 @@ contains
 
   end subroutine
 
+
   subroutine fpm_graph
 
     ! FPM Graph (as on 23.03.2025)
@@ -86,108 +89,149 @@ contains
 
   end subroutine
 
+
   subroutine diamond_graph
 
-      !     1
-      !   /   \
-      !  2     3
-      !   \   /
-      !     4
+    !     1
+    !   /   \
+    !  2     3
+    !   \   /
+    !     4
 
-      type(tree_t) :: tree
+    type(tree_t) :: tree
 
-      tree%ndep = 4
+    tree%ndep = 4
 
-      tree%ia = [1,4,6,8,9]
-      tree%ja = [ 1, 2, 3,    &
-                     2,    4, &
-                        3, 4, &
-                           4 ]
+    tree%ia = [1,4,6,8,9]
+    tree%ja = [ 1, 2, 3,    &
+                   2,    4, &
+                      3, 4, &
+                         4 ]
 
-      associate(depth => dependency_depth(tree), &
-                expected => [0,1,1,2])
-        call do_check(depth,expected,"diamond_graph")
-      end associate
+    associate(depth => dependency_depth(tree), &
+              expected => [0,1,1,2])
+      call do_check(depth,expected,"diamond_graph")
+    end associate
+
   end subroutine
+
 
   subroutine diamond_graph_2
 
-      !     1
-      !   /   \
-      !  2     3
-      !   \   / \
-      !     4    5
+    !     1
+    !   /   \
+    !  2     3
+    !   \   / \
+    !     4    5
 
-      type(tree_t) :: tree
+    type(tree_t) :: tree
 
-      tree%ndep = 5
+    tree%ndep = 5
 
-      tree%ia = [1,4,6,9,10,11]
-      tree%ja = [ 1, 2, 3,       &
-                     2,    4,    &
-                        3, 4, 5, &
-                           4,    &
-                              5 ]
+    tree%ia = [1,4,6,9,10,11]
+    tree%ja = [ 1, 2, 3,       &
+                   2,    4,    &
+                      3, 4, 5, &
+                         4,    &
+                            5 ]
 
-      associate(depth => dependency_depth(tree), &
-                expected => [0,1,1,2,2])
-        call do_check(depth,expected,"diamond_graph_2")
-      end associate
+    associate(depth => dependency_depth(tree), &
+              expected => [0,1,1,2,2])
+      call do_check(depth,expected,"diamond_graph_2")
+    end associate
   end subroutine
 
 
   subroutine pyramid_graph
 
-      !       1
-      !     /   \
-      !    2 --> 3
-      !   / \   / \
-      ! 4 --> 5 --> 6
+    !       1
+    !     /   \
+    !    2 --> 3
+    !   / \   / \
+    ! 4 --> 5 --> 6
 
-      type(tree_t) :: tree
+    type(tree_t) :: tree
 
-      tree%ndep = 6
+    tree%ndep = 6
 
-      tree%ia = [ 1, 4, 8, 11, 13, 15, 16]
-      tree%ja = [ 1, 2, 3, &
-                  2, 3, 4, 5, &
-                  3, 5, 6, &
-                  4, 5, &
-                  5, 6, &
-                  6]
+    tree%ia = [ 1, 4, 8, 11, 13, 15, 16]
+    tree%ja = [ 1, 2, 3, &
+                2, 3, 4, 5, &
+                3, 5, 6, &
+                4, 5, &
+                5, 6, &
+                6]
 
-      associate(depth => dependency_depth(tree), &
-                expected => [0,1,1,2,2,2])
-        call do_check(depth,expected,"pyramid_graph")
-      end associate
+    associate(depth => dependency_depth(tree), &
+              expected => [0,1,1,2,2,2])
+      call do_check(depth,expected,"pyramid_graph")
+    end associate
   end subroutine
+
 
   subroutine matcha_graph
 
     ! Matcha project (as on 23.03.2025)
     ! https://github.com/BerkeleyLab/matcha
 
-      ! 1 matcha
-      ! 2   assert
-      ! 3   julienne
-      !       assert (*)
-      ! 4   sourcery
-      !       assert (*)
+    ! 1 matcha
+    ! 2   assert
+    ! 3   julienne
+    !       assert (*)
+    ! 4   sourcery
+    !       assert (*)
 
-      type(tree_t) :: tree
+    type(tree_t) :: tree
 
-      tree%ndep = 4
+    tree%ndep = 4
 
-      tree%ia = [ 1, 5, 6, 8, 10]
-      tree%ja = [ 1, 2, 3, 4, &
-                  2, &
-                  3, 2, &
-                  4, 2]
+    tree%ia = [ 1, 5, 6, 8, 10]
+    tree%ja = [ 1, 2, 3, 4, &
+                2, &
+                3, 2, &
+                4, 2]
 
-      associate(depth => dependency_depth(tree), &
-                expected => [0,1,1,1])
-        call do_check(depth,expected,"matcha_graph")
-      end associate
+    associate(depth => dependency_depth(tree), &
+              expected => [0,1,1,1])
+      call do_check(depth,expected,"matcha_graph")
+    end associate
+
+  end subroutine
+
+
+  subroutine dftd4_fit_graph
+
+    ! Matcha project (as on 23.03.2025)
+    ! https://github.com/dftd4/dftd4-fit
+
+    ! 1 dftd4-fit
+    ! 2   mctc-lib
+    ! 3     json-fortran
+    ! 4   dftd4
+    !       mctc-lib (*)
+    ! 5     multicharge
+    !         mctc-lib (*)
+    ! 6   nlopt-f
+    ! 7   minpack
+
+    type(tree_t) :: tree
+
+    tree%ndep = 7
+
+    tree%ia = [ 1, 6, 8, 9, 12, 14, 15, 16 ]
+    tree%ja = [ 1, 2, 4, 6, 7, &
+                2, 3, &
+                3, &
+                4, 2, 5, &
+                5, 2, &
+                6, &
+                7]
+
+    associate(depth => dependency_depth(tree), &
+              expected => [0,1,2,1,2,1,1])
+      call do_check(depth,expected,"dftd4_fit_graph")
+    end associate
+
   end subroutine
 
 end program check
