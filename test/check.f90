@@ -7,6 +7,7 @@ call fpm_graph
 call diamond_graph
 call diamond_graph_2
 call pyramid_graph
+call matcha_graph
 
 print *, "Tests PASSED."
 
@@ -24,6 +25,7 @@ contains
 
   subroutine fpm_deps_graph
 
+    ! This project (as on 23.03.2025)
 
     ! 1 fpm-deps
     ! 2   fpm
@@ -54,6 +56,9 @@ contains
   end subroutine
 
   subroutine fpm_graph
+
+    ! FPM Graph (as on 23.03.2025)
+    ! https://github.com/fortran-lang/fpm
 
     ! 1   fpm
     ! 2   toml-f
@@ -154,6 +159,34 @@ contains
       associate(depth => dependency_depth(tree), &
                 expected => [0,1,1,2,2,2])
         call do_check(depth,expected,"pyramid_graph")
+      end associate
+  end subroutine
+
+  subroutine matcha_graph
+
+    ! Matcha project (as on 23.03.2025)
+    ! https://github.com/BerkeleyLab/matcha
+
+      ! 1 matcha
+      ! 2   assert
+      ! 3   julienne
+      !       assert (*)
+      ! 4   sourcery
+      !       assert (*)
+
+      type(tree_t) :: tree
+
+      tree%ndep = 4
+
+      tree%ia = [ 1, 5, 6, 8, 10]
+      tree%ja = [ 1, 2, 3, 4, &
+                  2, &
+                  3, 2, &
+                  4, 2]
+
+      associate(depth => dependency_depth(tree), &
+                expected => [0,1,1,1])
+        call do_check(depth,expected,"matcha_graph")
       end associate
   end subroutine
 

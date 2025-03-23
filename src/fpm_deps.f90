@@ -280,13 +280,11 @@ contains
     ! Mark all nodes as unvisitied
     depth = -1
 
-    ! Traverse the assigning depths to the nodes starting from the root.
-!    call dfs(tree%ndep,tree%ia,tree%ja,depth,d=0,k=1)
 
     call bfs(tree%ndep,tree%ia,tree%ja,depth)
-    !do k = 1, tree%ndep
-    !    print *, k, depth(k), tree%dep(k)%name
-    !end do
+
+    ! Traverse the assigning depths to the nodes starting from the root.
+    ! call dfs(tree%ndep,tree%ia,tree%ja,depth,d=0,k=1)
 
   contains
 
@@ -311,6 +309,7 @@ contains
 
     end subroutine
 
+    ! Assign depth using a breadth-first traversal
     subroutine bfs(n,ia,ja,depth)
       integer, intent(in) :: n
       integer, intent(in) :: ia(n+1), ja(:)
@@ -322,11 +321,11 @@ contains
       depth(1) = 0
 
       do k = 1, n
-        do j = ia(k)+1,ia(k+1)-1
-          associate(jj => ja(j))
-            if (depth(jj) < 0) depth(jj) = depth(k) + 1
-          end associate
+        associate(d => depth(k))
+        do j = ia(k), ia(k+1)-1
+          if (depth(ja(j)) < 0) depth(ja(j)) = d + 1
         end do
+        end associate
       end do
 
     end subroutine
