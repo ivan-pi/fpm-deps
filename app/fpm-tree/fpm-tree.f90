@@ -29,7 +29,6 @@ debug_unit = error_unit
 nargs = command_argument_count()
 call get_command_argument(0,buf,length=blen) ! use program name for friendly output
 name = buf(1:blen)
-print *, name
 
 ! Default settings
 cmd_depth = -1
