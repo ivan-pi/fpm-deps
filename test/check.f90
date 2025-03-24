@@ -14,6 +14,7 @@ call depth6_graph
 call depth3_graph
 call halo_graph
 call simple_cycle_graph
+call tricycle_graph
 
 print *, "Tests PASSED."
 
@@ -46,7 +47,7 @@ contains
     type(tree_t) :: tree
 
     tree%ndep = 7
-    tree%ia = [1, 3, 9, 10, 11, 12, 14, 15]
+    tree%ia = [ 1, 3, 9, 10, 11, 12, 14, 15]
     tree%ja = [ 1, 2, &
                    2, 3, 4, 5, 6, 7, &
                       3, &
@@ -79,7 +80,7 @@ contains
     type(tree_t) :: tree
 
     tree%ndep = 6
-    tree%ia = [1,7,8,9,10,12,13]
+    tree%ia = [ 1, 7, 8, 9, 10, 12, 13]
     tree%ja = [ 1, 2, 3, 4, 5, 6, &
                    2,             &
                       3,          &
@@ -107,7 +108,7 @@ contains
 
     tree%ndep = 4
 
-    tree%ia = [1,4,6,8,9]
+    tree%ia = [ 1, 4, 6, 8, 9]
     tree%ja = [ 1, 2, 3,    &
                    2,    4, &
                       3, 4, &
@@ -133,7 +134,7 @@ contains
 
     tree%ndep = 5
 
-    tree%ia = [1,4,6,9,10,11]
+    tree%ia = [ 1, 4, 6, 9, 10, 11]
     tree%ja = [ 1, 2, 3,       &
                    2,    4,    &
                       3, 4, 5, &
@@ -223,7 +224,7 @@ contains
 
     tree%ndep = 7
 
-    tree%ia = [ 1, 6, 8, 9, 12, 14, 15, 16 ]
+    tree%ia = [ 1, 6, 8, 9, 12, 14, 15, 16]
     tree%ja = [ 1, 2, 4, 6, 7, &
                 2, 3, &
                 3, &
@@ -258,7 +259,7 @@ contains
 
     tree%ndep = 5
 
-    tree%ia = [ 1, 5, 6, 9, 12, 13  ]
+    tree%ia = [ 1, 5, 6, 9, 12, 13]
     tree%ja = [ 1, 2, 3, 4, &
                 2, &
                 3, 2, 4, &
@@ -388,14 +389,14 @@ contains
   subroutine tricycle_graph
 
     !   1 -> 2 -> 3 -> 1
-    !
+    !   1 -> 3 -> 2 -> 1
 
     type(tree_t) :: tree
     tree%ndep = 3
-    tree%ia = [1, 3, 5, 7]
-    tree%ja = [1, 2, &
-               2, 3, &
-               3, 1]
+    tree%ia = [1, 4, 7, 10]
+    tree%ja = [1, 2, 3, &
+               2, 3, 1, &
+               3, 1, 2]
 
     associate(depth => dependency_depth(tree), &
               expected => [0,1,1])
