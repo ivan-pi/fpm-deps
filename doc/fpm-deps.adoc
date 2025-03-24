@@ -1,0 +1,87 @@
+= fpm-deps(1)
+
+:doctype: manpage
+:release-version: 0.1.0
+:manmanual: fpm-deps command
+
+== Name
+
+fpm-deps - Create a fpm dependency graph in DOT language
+
+== Synopsis
+
+*fpm-deps* [_OPTION_]...
+
+== Description
+
+The fpm-deps(1) command outputs the package dependency graph using
+the Graphviz DOT graph description language. Alternatively it can
+output the graph in format suitable for the Mermaid diagram-drawing tool.
+
+== Options
+
+*-o, --output* _OUTPUT_::
+  Output file. If not specified, the graph will be printed to standard
+  output.
+
+*-d, --depth* _DEPTH_::
+  Maximum dependency _DEPTH_ to display. For example a depth of 1 displays the
+  direct dependencies.
+
+*--dpi* _DPI_::
+  Set the dots-per-inch for bitmap output, useful when piping to `+dot+`.
+
+*-M, --mermaid* [_FORMAT_]::
+  Output the graph as a Mermaid flowchart suitable for inclusion within
+  Markdown document. The optional _FORMAT_ can be either
+  "md" (default) or "html", which will create a standalone HTML document.
+
+*--no-url*::
+  Do not add homepage URLs to the graph nodes.
+
+*--no-tooltip*::
+  Avoid adding package descriptions as tooltips. This is useful when converting
+  the output to SVG or when using Mermaid output.
+
+*--rankdir* _RANKDIR_::
+  Set the direction of the graph layout. Supported values:
+  `TB` (Top-Bottom), `BT` (Bottom-Top), `LR` (Left-Right), `RL` (Right-Left).
+  The default is `TB`.
+
+*--version*::
+  Print the version number
+
+*-h, --help*::
+  Print a help message.
+
+== Exit status
+
+*0*::
+  Success
+*1*::
+  Command-line parsing failure
+
+== EXAMPLES
+
+To generate a PNG graph:
+
+  +
+  ----
+  $ fpmdeps --dpi 96 | dot -Tpng -ograph.png
+  ----
+
+To write the graph to a file:
+
+  +
+  ----
+  $ fpmdeps -o graph.gv
+  ----
+
+== REPORTING BUGS
+
+Please report any bugs or issues by opening a new issue at:
+https://github.com/ivan-pi/fpm-deps
+
+== SEE ALSO
+
+*dot*(1), *mermaid*(1)

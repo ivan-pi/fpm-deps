@@ -1,0 +1,47 @@
+= fpm-tree(1)
+
+:doctype: manpage
+:release-version: 0.1.0
+:manmanual: fpm-tree command
+
+== Name
+
+fpm-tree - Display a tree visualization of the package dependency graph
+
+== Synopsis
+
+*fpm-tree* [_OPTION_]...
+
+== Description
+
+The fpm-tree(1) command displays a tree-view of the package dependency graph.
+The packages are displayed in the order encountered during a depth-first search
+of the tree.
+
+== Options
+
+*-c, --charset* _CHARSET_::
+  Choose the character set to use for the tree. Valid values are "utf8" or
+  "ascii". When unspecified, the default is "utf8".
+
+*-d, --depth* _DEPTH_::
+  Maximum dependency _DEPTH_ to display. For example a depth of 1 displays the
+  direct dependencies.
+
+*--no-dedupe*::
+  Do not de-duplicate repeated dependencies. If a dependency has been
+  displayed already, further occurences of the same package will not
+  repeat the dependencies, but include a `+(*)+` instead.
+
+*--version*::
+  Print version number
+
+*-h, --help*::
+  Print a help message.
+
+== Exit status
+
+*0*::
+  Success
+*1*::
+  Command-line parsing failure
