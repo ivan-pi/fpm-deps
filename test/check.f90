@@ -2,6 +2,9 @@ program check
 use fpm_deps, only: tree_t, dependency_depth
 implicit none
 
+!
+! dependency_depth
+!
 call fpm_deps_graph
 call fpm_graph
 call diamond_graph
@@ -16,7 +19,12 @@ call halo_graph
 call simple_cycle_graph
 call tricycle_graph
 
-print *, "Tests PASSED."
+!
+! exlude mask
+!
+call test_exclude_mask
+
+print *, "Tests PASSED"
 
 contains
 
@@ -402,6 +410,112 @@ contains
               expected => [0,1,1])
       call do_check(depth,expected,"tricycle_graph")
     end associate
+
+  end subroutine
+
+  function exclude_mask(deps,exclude) result(ex)
+    use fpm_dependency, only: dependency_node_t
+    type(dependency_node_t), intent(in) :: deps(:)
+    character(len=*), intent(in) :: exclude  ! A comma-separated list of packages
+    logical, allocatable :: ex(:)
+
+    integer :: i
+
+    allocate(ex(size(deps)))
+
+    do i = 1, size(deps)
+      ex(i) = index(exclude,deps(i)%name) > 0
+    end do
+
+    ! FIXME: warning about packages not found
+
+  end function
+
+  subroutine test_exclude_mask
+
+    use fpm_dependency, only: dependency_node_t
+    use fpm_deps, only: exclude_mask
+
+    type(dependency_node_t), allocatable :: dep(:)
+    character(len=:), allocatable :: exclude
+    logical, allocatable :: mask(:), expected(:)
+
+    allocate(dep(7),expected(7))
+    dep(1)%name = "fpm-deps"
+    dep(2)%name = "fpm"
+    dep(3)%name = "toml-f"
+    dep(4)%name = "M_CLI2"
+    dep(5)%name = "fortran-regex"
+    dep(6)%name = "jonquil"
+    dep(7)%name = "fortran-shlex"
+
+
+    exclude = "fpm,M_CLI2,jonquil"
+    expected = .false.
+    expected([2,4,6]) = .true.
+
+    mask = exclude_mask(dep,exclude)
+    if (any(mask .neqv. expected)) then
+      print '(A,*(L2))', "got:      ", mask
+      print '(A,*(L2))', "expected: ", expected
+      error stop "test_exclude_mask 1"
+    end if
+
+    exclude = "fortran-shlex,toml-f"
+    expected = .false.
+    expected([3,7]) = .true.
+
+    mask = exclude_mask(dep,exclude)
+    if (any(mask .neqv. expected)) then
+      print '(A,*(L2))', "got:      ", mask
+      print '(A,*(L2))', "expected: ", expected
+      error stop "test_exclude_mask 2"
+    end if
+
+    deallocate(dep, expected)
+
+    ! ---
+
+    ! 1 forsolver
+    ! 2   kinds
+    ! 3   fordiff
+    !       kinds (*)
+    ! 4     forunittest
+    !     forunittest (*)
+    !       kinds (*)
+    ! 5     FACE
+    allocate(dep(5),expected(5))
+
+    dep(1)%name = "forsolver"
+    dep(2)%name = "kinds"
+    dep(3)%name = "fordiff"
+    dep(4)%name = "forunittest"
+    dep(5)%name = "FACE"
+
+    exclude = "kinds,     FACE"
+    expected = .false.
+    expected([2,5]) = .true.
+
+    mask = exclude_mask(dep,exclude)
+    if (any(mask .neqv. expected)) then
+      print '(A,*(L2))', "got:      ", mask
+      print '(A,*(L2))', "expected: ", expected
+      error stop "test_exclude_mask 3"
+    end if
+
+
+    exclude = "forunittest, fordiff, kinds"
+    expected = .false.
+    expected([2,3,4]) = .true.
+
+    mask = exclude_mask(dep,exclude)
+    if (any(mask .neqv. expected)) then
+      print '(A,*(L2))', "got:      ", mask
+      print '(A,*(L2))', "expected: ", expected
+      error stop "test_exclude_mask 4"
+    end if
+
+    deallocate(dep, expected)
 
   end subroutine
 
