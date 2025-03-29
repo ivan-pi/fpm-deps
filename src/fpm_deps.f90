@@ -18,6 +18,7 @@ public :: dependency_props
 public :: dependency_depth
 
 public :: exclude_mask
+public :: combine_masks
 
 public :: print_deps
 
@@ -360,6 +361,44 @@ contains
     ! FIXME: warning about packages not found
 
   end function
+
+
+  !> Combine the depth mask and the excluded mask
+  !>
+  !>   A breadth-first search must be used to correctly propagate the
+  !>   the mask values.
+  !>
+  subroutine combine_masks(tree,depth,ex,c)
+    type(tree_t), intent(in) :: tree
+    logical, intent(in) :: depth(tree%ndep), ex(tree%ndep)
+    logical, intent(out) :: c(tree%ndep)
+
+    c(1) = .true.
+    call bfs_mask(tree%ndep,tree%ia,tree%ja,depth,ex,c,1)
+  contains
+    !> Propagate mask values to dependencies
+    recursive subroutine bfs_mask(n,ia,ja,d,ex,c,k)
+      integer, intent(in) :: n, k
+      integer, intent(in) :: ia(n+1), ja(:)
+      logical, intent(in) :: d(n), ex(n)
+      logical, intent(inout) :: c(n)
+
+      integer :: j
+
+      ! Search the dependencies
+      do j = ia(k)+1, ia(k+1)-1
+        if (d(ja(j)) .eqv. ex(ja(j))) then
+          c(ja(j)) = .true.
+          call bfs_mask(n,ia,ja,d,ex,c,k=ja(j))
+        end if
+      end do
+
+    end subroutine
+
+  end subroutine
+
+
+
 
   !> Print a command-line dependency tree up to a certain depth
   subroutine print_deps(tree, max_depth)

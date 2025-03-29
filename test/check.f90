@@ -24,7 +24,14 @@ call tricycle_graph
 !
 call test_exclude_mask
 
+!
+! combining depth and exclude mask
+!
+call test_depth_exclude_1
+
 print *, "Tests PASSED"
+
+
 
 contains
 
@@ -431,6 +438,7 @@ contains
 
   end function
 
+
   subroutine test_exclude_mask
 
     use fpm_dependency, only: dependency_node_t
@@ -516,6 +524,48 @@ contains
     end if
 
     deallocate(dep, expected)
+
+  end subroutine
+
+
+  subroutine test_depth_exclude_1
+
+    ! 1 fpm-deps
+    ! 2   fpm
+    ! 3   toml-f
+    ! 4   M_CLI2
+    ! 5   fortran-regex
+    ! 6   jonquil
+    !       toml-f (*)
+    ! 7   fortran-shlex
+
+    type(tree_t) :: tree
+    character(len=:), allocatable :: exclude
+    logical, allocatable :: mask(:), expected(:)
+
+    allocate(tree%dep(7),expected(7))
+    tree%ndep = size(tree%dep)
+
+    tree%dep(1)%name = "fpm-deps"
+    tree%dep(2)%name = "fpm"
+    tree%dep(3)%name = "toml-f"
+    tree%dep(4)%name = "M_CLI2"
+    tree%dep(5)%name = "fortran-regex"
+    tree%dep(6)%name = "jonquil"
+    tree%dep(7)%name = "fortran-shlex"
+
+    tree%ia = [ 1, 3, 9, 10, 11, 12, 14, 15]
+    tree%ja = [ 1, 2, &
+                   2, 3, 4, 5, 6, 7, &
+                      3, &
+                         4, &
+                            5, &
+                              6, 3, &    ! May break if sorting is introduced
+                                 7 ]
+
+    exclude = "jonquil, fortran-regex"
+    mask = exclude_mask(tree%dep,exclude)
+
 
   end subroutine
 
