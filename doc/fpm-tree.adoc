@@ -20,12 +20,19 @@ of the tree.
 
 == Options
 
-*-c, --charset* _CHARSET_::
-  Choose the character set to use for the tree. Valid values are "utf8" or
-  "ascii". When unspecified, the default is "utf8".
+*--charset* _CHARSET_::
+  Choose the character set to use for the tree. Valid values are "utf8" (default) or
+  "ascii".
 
-*-d, --depth* _DEPTH_::
-  Maximum dependency _DEPTH_ to display. For example a depth of 1 displays the
+*--prefix* _PREFIX_::
+  Sets how each line is displayed. The _PREFIX_ value can be one of:
+
+  * `indent` (default) -- Shows each line indented as a tree
+  * `depth` -- Show as a list, with the numeric depth printed before each entry
+  * `none` -- Show as a flat list
+
+*--depth* _DEPTH_::
+  Maximum dependency _DEPTH_ to display. A depth of 1 displays the
   direct dependencies.
 
 *--no-dedupe*::
@@ -37,11 +44,12 @@ of the tree.
   Print version number
 
 *-h, --help*::
-  Print a help message.
+  Prints help information
 
 == Exit status
 
-*0*::
-  Success
-*1*::
-  Command-line parsing failure
+Exits with 0 on success, and >0 if an error occurs.
+
+== Resources
+
+*Project web site:* https://github.com/ivan-pi/fpm-deps

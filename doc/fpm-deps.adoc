@@ -24,9 +24,17 @@ output the graph in format suitable for the Mermaid diagram-drawing tool.
   Output file. If not specified, the graph will be printed to standard
   output.
 
-*-d, --depth* _DEPTH_::
+*--manifest-path* _PATH_::
+  Path to the `fpm.toml` manifest file. In unspecified, fpm-deps(1) will look in
+  the current directory.
+
+*--depth* _DEPTH_::
   Maximum dependency _DEPTH_ to display. For example a depth of 1 displays the
   direct dependencies.
+
+*-x, --exclude _LIST_::
+  A comma-separated list of packages to exclude from the graph. Either use quotes or
+  make sure there are no spaces between elements of _LIST_.
 
 *--dpi* _DPI_::
   Set the dots-per-inch for bitmap output, useful when piping to `+dot+`.
@@ -56,30 +64,37 @@ output the graph in format suitable for the Mermaid diagram-drawing tool.
 
 == Exit status
 
-*0*::
-  Success
-*1*::
-  Command-line parsing failure
+Exits with 0 on success, and >0 if an error occurs.
 
 == EXAMPLES
 
-To generate a PNG graph:
+Generate the dependency graph and produce a PNG image:
 
-  +
-  ----
-  $ fpmdeps --dpi 96 | dot -Tpng -ograph.png
-  ----
+----
+$ fpm-deps --dpi 96 | dot -Tpng -ograph.png
+----
 
-To write the graph to a file:
+Generate the dependency graph and produce a SVG image:
 
-  +
-  ----
-  $ fpmdeps -o graph.gv
-  ----
+----
+$ fpm-deps | dot -Tsvg -ograph.svg
+----
+
+Write the graph in DOT language to a file:
+
+----
+$ fpm-deps -o graph.gv
+----
+
+Produce a Mermaid graph printed to standard output:
+----
+$ fpm-deps --mermaid
+----
+
 
 == REPORTING BUGS
 
-Please report any bugs or issues by opening a new issue at:
+Please report any bugs or other comments/wishes by opening a new issue at:
 https://github.com/ivan-pi/fpm-deps
 
 == SEE ALSO
