@@ -9,7 +9,8 @@ use fpm_error, only: error_t
 
 implicit none
 
-character(len=*), parameter :: version_str = "fpm-deps version 0.2.1"
+character(len=*), parameter :: version = "0.2.1"
+character(len=*), parameter :: version_str = "fpm-deps version "//version
 
 integer :: nargs, k, unit, debug_unit
 character(len=:), allocatable :: name
@@ -42,7 +43,10 @@ cmd_mermaid = .false.
 cmd_html = .false.
 cmd_dpi = -1
 cmd_depth = -1
+
 outfile = '-'           ! Standard output
+unit = output_unit
+
 
 ! Process command-line arguments
 k = 1
@@ -214,14 +218,14 @@ block
     !print *, tree%ia
     !print *, tree%ja
 
-    ! ------- OUTPUT ---------
+    ! --- PICK UNIT ---
 
     ! Pick output unit
-    if (outfile == '-') then
-        unit = output_unit
-    else
-        open(newunit=unit, file=outfile, action='write', status='replace')
+    if (outfile /= '-') then
+        open(newunit=unit, file=trim(outfile), action='write', status='replace')
     end if
+
+    ! --- GENERATE OUTPUT ---
 
     if (cmd_mermaid) then
         if (cmd_html) then
