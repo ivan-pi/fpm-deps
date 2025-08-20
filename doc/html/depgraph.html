@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fpm-deps dependency graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+      html {
+        min-height: 100%;
+        position: relative;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        padding-bottom: 50px; /* extra space */
+      }
+      footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        text-align: left;
+        font-size: 0.9em;
+        color: #555;
+        padding: 10px;
+      }
+    </style>
+</head>
+<body>
+  <div class="diagram-container" id="diagram-container">
+  <pre class="mermaid">
+flowchart TB
+  N1[fpm-deps]
+  N2[fpm]
+  N3[toml-f]
+  N4[M_CLI2]
+  N5[fortran-regex]
+  N6[jonquil]
+  N7[fortran-shlex]
+  click N1 href "https://github.com/ivan-pi/fpm-deps" "Generate dependency graphs of Fortran packages"
+  click N2 href "https://fpm.fortran-lang.org/" "Fortran Package Manager"
+  click N3 href "https://toml-f.github.io/toml-f" "TOML parser implementation for data serialization and deserialization"
+  click N4 href "https://github.com/urbanjost/M_CLI2.git" "Unix-style commandline parsing using a prototype command"
+  click N5 href "https://github.com/perazz/fortran-regex" "Fortran regex library"
+  click N6 href "https://toml-f.readthedocs.io/en/latest/how-to/jonquil/" "Bringing TOML blooms to JSON land"
+  N1-->N2
+  N2-->N3
+  N2-->N4
+  N2-->N5
+  N2-->N6
+  N2-->N7
+  N6-->N3
+  </pre>
+  </div>
+  <script>
+    window.callback = function () {
+      alert("A callback was triggered");
+    };
+    const config = {
+      startOnLoad: true,
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: "cardinal" },
+      securityLevel: "loose",
+    };
+    mermaid.initialize(config);
+  </script>
+  <footer>
+    Generated using <a href="https://github.com/ivan-pi/fpm-deps">fpm-deps</a>
+  </footer>
+</body>
+</html>
+

@@ -1,0 +1,17 @@
+= fpm-deps & fpm-tree
+
+:repo-url: https://github.com/ivan-pi/fpm-deps
+:icons: font
+
+== Overview
+
+This site hosts the documentation for two small command-line tools:
+
+* link:fpm-deps.html[*fpm-deps*] — generate a dependency graph of Fortran projects managed with fpm
+* link:fpm-tree.html[*fpm-tree*] — explore the dependency tree of Fortran projects
+
+Both tools are open source and available here: {repo-url}[GitHub Repository].
+
+== Dependency graph gallery
+
+* link:depgraph.html[fpm-deps]
