@@ -38,13 +38,14 @@ ht, &
 '    </style>', &
 '</head>', &
 '<body>', &
-bt, &
+'  <div class="diagram-container" id="diagram-container">', &
 '  <pre class="mermaid">'
 
 call print_mermaid_graph(html_unit,package_name)
 
 write(html_unit,'(*(A,/))') &
 '  </pre>', &
+'  </div>', &
 '  <script>', &
 '    window.callback = function () {', &
 '      alert("A callback was triggered");', &
