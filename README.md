@@ -17,7 +17,7 @@ The commands above will install the `fpm-deps` executable into the `$HOME/.local
 The result can be piped to the Graphviz [`dot`](https://graphviz.org/doc/info/command.html) command, e.g.:
 
 ```
-fpm-deps | dot -Tsvg -ofpmdeps.svg
+fpm-deps | dot -Tsvg -ofpmdeps.svg
 ```
 resulting in
 
