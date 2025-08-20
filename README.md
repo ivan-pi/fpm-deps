@@ -39,7 +39,9 @@ The rendered output can be seen [here](https://ivan-pi.github.io/fpm-deps/depgra
 
 ## See also
 
-Similar projects:
+For visualizing Fortran *module dependency graphs*, check out [**fpm-modules**](https://github.com/davidpfister/fpm-modules).
+
+Similar projects for other programming languages:
 
 - [cargo-depgraph](https://crates.io/crates/cargo-depgraph/)
 - [cargo-deps](https://crates.io/crates/cargo-deps)
@@ -47,7 +49,6 @@ Similar projects:
 - [pipdeptree](https://pypi.org/project/pipdeptree/)
 - [conda-tree](https://github.com/conda-incubator/conda-tree)
 
-For visualizing Fortran module dependency graphs, check out [**fpm-modules**](https://github.com/davidpfister/fpm-modules).
 
 ## Acknowledgments
 
