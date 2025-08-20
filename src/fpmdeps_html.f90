@@ -22,7 +22,7 @@ contains
         ht = "<title>"//package_name//" dependency graph</title>"
         bt = "<h1>"//package_name//" dependency graph</h1>"
 
-        write(html_unit,'(*(A,/))') &
+        write(html_unit,'(*(A,:,/))') &
 '<!DOCTYPE html>', &
 '<html lang="en">', &
 '<head>', &
@@ -31,10 +31,26 @@ contains
 ht, &
 '    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>', &
 '    <style>', &
-'        body {', &
-'            font-family: Arial, sans-serif;', &
-'            padding: 20px;', &
-'        }', &
+'      html {', &
+'        min-height: 100%;', &
+'        position: relative;', &
+'      }', &
+'      body {', &
+'        font-family: Arial, sans-serif;', &
+'        margin: 0;', &
+'        padding: 20px;', &
+'        padding-bottom: 50px; /* extra space */', &
+'      }', &
+'      footer {', &
+'        position: absolute;', &
+'        bottom: 0;', &
+'        left: 0;', &
+'        width: 100%;', &
+'        text-align: left;', &
+'        font-size: 0.9em;', &
+'        color: #555;', &
+'        padding: 10px;', &
+'      }', &
 '    </style>', &
 '</head>', &
 '<body>', &
@@ -57,6 +73,9 @@ write(html_unit,'(*(A,/))') &
 '    };', &
 '    mermaid.initialize(config);', &
 '  </script>', &
+'  <footer>', &
+'    Generated using <a href="https://github.com/ivan-pi/fpm-deps">fpm-deps</a>', &
+'  </footer>', &
 '</body>', &
 '</html>'
 
