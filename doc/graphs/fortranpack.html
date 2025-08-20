@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortranpack dependency graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+      html {
+        min-height: 100%;
+        position: relative;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        padding-bottom: 50px; /* extra space */
+      }
+      footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        text-align: left;
+        font-size: 0.9em;
+        color: #555;
+        padding: 10px;
+      }
+    </style>
+</head>
+<body>
+  <div class="diagram-container" id="diagram-container">
+  <pre class="mermaid">
+flowchart TB
+  N1[fortranpack]
+  N2[argv-fortran]
+  N3[bspline-fortran]
+  N4[carlson-elliptic-integrals]
+  N5[conmax]
+  N6[conmin]
+  N7[csv-fortran]
+  N8[daglib]
+  N9[ddeabm]
+  N10[dop853]
+  N11[finterp]
+  N12[fortran-mach]
+  N13[fortran-search-and-sort]
+  N14[json-fortran]
+  N15[lbfgsb]
+  N16[mersenne-twister-fortran]
+  N17[nlesolver-fortran]
+  N18[NumDiff]
+  N19[optgra]
+  N20[pchip]
+  N21[pikaia]
+  N22[polyroots-fortran]
+  N23[popen-fortran]
+  N24[psqp]
+  N25[pyplot-fortran]
+  N26[quadpack]
+  N27[quadrature-fortran]
+  N28[regridpack]
+  N29[rklib]
+  N30[roots-fortran]
+  N31[simulated-annealing]
+  N32[slsqp]
+  N33[splpak]
+  N34[stringsort]
+  N35[uuid-fortran]
+  N36[fmin]
+  N37[LSQR]
+  N38[lusol]
+  N39[LSMR]
+  click N2 href "https://github.com/jacobwilliams/argv-fortran" "A better get_command_argument for Fortran"
+  click N3 href "https://github.com/jacobwilliams/bspline-fortran" "Multidimensional B-Spline Interpolation of Data on a Regular Grid"
+  click N4 href "https://github.com/jacobwilliams/carlson-elliptic-integrals" "Carlson symmetric forms of elliptic integrals"
+  click N5 href "https://github.com/jacobwilliams/conmax" "Refactored CONMAX Library"
+  click N6 href "https://github.com/jacobwilliams/conmin" "Modern Fortran edition of conmin"
+  click N7 href "https://github.com/jacobwilliams/csv-fortran" "Read and Write CSV Files Using Modern Fortran"
+  click N8 href "https://github.com/jacobwilliams/daglib" "Directed Acyclic Graphs With Modern Fortran"
+  click N9 href "https://github.com/jacobwilliams/ddeabm" "Modern Fortran Implementation of the DDEABM Adams-Bashforth Algorithm"
+  click N10 href "https://github.com/jacobwilliams/dop853" "Modern Fortran Edition of Hairer's DOP853 ODE Solver"
+  click N11 href "https://github.com/jacobwilliams/finterp" "Modern Fortran Multidimensional Linear Interpolation"
+  click N12 href "https://github.com/jacobwilliams/fortran-mach" "Modern Fortran Machine Constants Module"
+  click N13 href "https://github.com/jacobwilliams/fortran-search-and-sort" "Searching and sorting with modern Fortran"
+  click N14 href "https://github.com/jacobwilliams/json-fortran" "A Modern Fortran JSON API"
+  click N15 href "https://github.com/jacobwilliams/lbfgsb" "lbfgsb optimization library"
+  click N16 href "https://github.com/jacobwilliams/mersenne-twister-fortran" "Mersenne Twister pseudorandom number generator"
+  click N17 href "https://github.com/jacobwilliams/nlesolver-fortran" "Nonlinear Equation Solver with Modern Fortran"
+  click N18 href "https://github.com/jacobwilliams/NumDiff" "Modern Fortran Numerical Differentiation Library"
+  click N19 href "https://github.com/jacobwilliams/optgra" "optgra"
+  click N20 href "https://github.com/jacobwilliams/PCHIP" "Piecewise Cubic Hermite Interpolation Package"
+  click N21 href "https://github.com/jacobwilliams/pikaia" "Modern Fortran Edition of the Pikaia Genetic Algorithm"
+  click N22 href "https://github.com/jacobwilliams/polyroots-fortran" "Polynomial Roots with Modern Fortran"
+  click N23 href "https://github.com/jacobwilliams/popen-fortran" "Simple Fortran module for popen"
+  click N24 href "https://github.com/jacobwilliams/psqp" "Modern Fortran edition of PSQP"
+  click N25 href "https://github.com/jacobwilliams/pyplot-fortran" "A simple module for generating plots from Fortran using Python's matplotlib.pyplot."
+  click N26 href "https://github.com/jacobwilliams/quadpack" "Modern Fortran QUADPACK"
+  click N27 href "https://github.com/jacobwilliams/quadrature-fortran" "Adaptive Gaussian Quadrature with Modern Fortran"
+  click N28 href "https://github.com/jacobwilliams/regridpack" "Modern Fortran Edition of REGRIDPACK"
+  click N29 href "https://github.com/jacobwilliams/rklib" "Fixed and variable-step Runge-Kutta solvers in Modern Fortran"
+  click N30 href "https://github.com/jacobwilliams/roots-fortran" "A library for finding the roots of continuous scalar functions of a single real variable"
+  click N31 href "https://github.com/jacobwilliams/simulated-annealing" "Simulated Annealing with Modern Fortran"
+  click N32 href "https://github.com/jacobwilliams/slsqp" "Modern Fortran Edition of the SLSQP Optimizer"
+  click N33 href "https://github.com/jacobwilliams/splpak" "Modernized SPLPAK library for multidimensional least-squares cubic spline fitting"
+  click N34 href "https://github.com/jacobwilliams/stringsort" "Just some sorting routines for strings"
+  click N35 href "https://github.com/jacobwilliams/uuid-fortran" "Fortran module for generating UUIDs"
+  click N36 href "https://github.com/jacobwilliams/fmin" "Derivative free 1D function minimizer in modern Fortran"
+  click N37 href "https://github.com/jacobwilliams/LSQR" "Modern Fortran sparse linear systems solver"
+  click N38 href "https://github.com/jacobwilliams/lusol" "LUSOL"
+  N1-->N2
+  N1-->N3
+  N1-->N4
+  N1-->N5
+  N1-->N6
+  N1-->N7
+  N1-->N8
+  N1-->N9
+  N1-->N10
+  N1-->N11
+  N1-->N12
+  N1-->N13
+  N1-->N14
+  N1-->N15
+  N1-->N16
+  N1-->N17
+  N1-->N18
+  N1-->N19
+  N1-->N20
+  N1-->N21
+  N1-->N22
+  N1-->N23
+  N1-->N24
+  N1-->N25
+  N1-->N26
+  N1-->N27
+  N1-->N28
+  N1-->N29
+  N1-->N30
+  N1-->N31
+  N1-->N32
+  N1-->N33
+  N1-->N34
+  N1-->N35
+  N9-->N30
+  N17-->N36
+  N17-->N37
+  N17-->N38
+  N17-->N39
+  N21-->N16
+  N29-->N30
+  </pre>
+  </div>
+  <script>
+    window.callback = function () {
+      alert("A callback was triggered");
+    };
+    const config = {
+      startOnLoad: true,
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: "cardinal" },
+      securityLevel: "loose",
+    };
+    mermaid.initialize(config);
+  </script>
+  <footer>
+    Generated using <a href="https://github.com/ivan-pi/fpm-deps">fpm-deps</a>
+  </footer>
+</body>
+</html>
+

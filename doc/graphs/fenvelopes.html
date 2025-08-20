@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fenvelopes dependency graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+      html {
+        min-height: 100%;
+        position: relative;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        padding-bottom: 50px; /* extra space */
+      }
+      footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        text-align: left;
+        font-size: 0.9em;
+        color: #555;
+        padding: 10px;
+      }
+    </style>
+</head>
+<body>
+  <div class="diagram-container" id="diagram-container">
+  <pre class="mermaid">
+flowchart TB
+  N1[fenvelopes]
+  N2[ftools]
+  N3[yaeos]
+  N4[FLAP]
+  N5[fordiff]
+  N6[forsolver]
+  N7[stdlib]
+  N8[forbear]
+  N9[json-fortran]
+  N10[forsus]
+  N11[fortime]
+  N12[PowellOpt]
+  N13[finterp]
+  N14[FACE]
+  N15[PENF]
+  N16[kinds]
+  N17[forunittest]
+  click N4 href "https://github.com/szaghi/FLAP" "Fortran command Line Arguments Parser for poor people"
+  click N8 href "https://github.com/szaghi/forbear" "Fortran (progress) B(e)ar envinronment"
+  click N9 href "https://github.com/jacobwilliams/json-fortran" "A Modern Fortran JSON API"
+  click N10 href "https://ipqa-research.github.io/forsus"
+  click N13 href "https://github.com/jacobwilliams/finterp" "Modern Fortran Multidimensional Linear Interpolation"
+  click N14 href "https://github.com/szaghi/FACE" "Fortran Ansi Colors (and Styles) Environment"
+  click N15 href "https://github.com/szaghi/PENF" "Portability Environment for Fortran poor people"
+  N1-->N2
+  N1-->N3
+  N1-->N4
+  N1-->N5
+  N1-->N6
+  N3-->N7
+  N3-->N8
+  N3-->N9
+  N3-->N10
+  N3-->N11
+  N3-->N12
+  N3-->N13
+  N4-->N14
+  N4-->N15
+  N5-->N16
+  N5-->N17
+  N6-->N16
+  N6-->N5
+  N6-->N17
+  N8-->N14
+  N10-->N9
+  N11-->N14
+  N17-->N14
+  </pre>
+  </div>
+  <script>
+    window.callback = function () {
+      alert("A callback was triggered");
+    };
+    const config = {
+      startOnLoad: true,
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: "cardinal" },
+      securityLevel: "loose",
+    };
+    mermaid.initialize(config);
+  </script>
+  <footer>
+    Generated using <a href="https://github.com/ivan-pi/fpm-deps">fpm-deps</a>
+  </footer>
+</body>
+</html>
+

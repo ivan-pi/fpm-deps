@@ -15,3 +15,7 @@ Both tools are open source and available here: {repo-url}[GitHub Repository].
 == Dependency graph gallery
 
 * link:depgraph.html[fpm-deps]
+* link:graphs/fortranpack.html[fortranpack]
+* link:graphs/fenvelopes.html[fenvelopes]
+* link:graphs/dmpack.html[dmpack]
+

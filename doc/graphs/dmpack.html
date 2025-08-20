@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dmpack dependency graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+      html {
+        min-height: 100%;
+        position: relative;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        padding-bottom: 50px; /* extra space */
+      }
+      footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        text-align: left;
+        font-size: 0.9em;
+        color: #555;
+        padding: 10px;
+      }
+    </style>
+</head>
+<body>
+  <div class="diagram-container" id="diagram-container">
+  <pre class="mermaid">
+flowchart TB
+  N1[dmpack]
+  N2[fortran-curl]
+  N3[fortran-modbus]
+  N4[fortran-lua54]
+  N5[fortran-pcre2]
+  N6[fortran-sqlite3]
+  N7[fortran-unix]
+  N8[fortran-xmpp]
+  N9[fortran-zlib]
+  N10[fortran-zstd]
+  N1-->N2
+  N1-->N3
+  N1-->N4
+  N1-->N5
+  N1-->N6
+  N1-->N7
+  N1-->N8
+  N1-->N9
+  N1-->N10
+  </pre>
+  </div>
+  <script>
+    window.callback = function () {
+      alert("A callback was triggered");
+    };
+    const config = {
+      startOnLoad: true,
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: "cardinal" },
+      securityLevel: "loose",
+    };
+    mermaid.initialize(config);
+  </script>
+  <footer>
+    Generated using <a href="https://github.com/ivan-pi/fpm-deps">fpm-deps</a>
+  </footer>
+</body>
+</html>
+
