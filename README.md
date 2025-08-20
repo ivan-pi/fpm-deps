@@ -1,6 +1,6 @@
 # fpm-deps
 
-*Generate dependency graphs of fpm packages*
+*Generate dependency graphs of [fpm](https://fpm.fortran-lang.org/) packages*
 
 To start using `fpm-deps` run the commands:
 
