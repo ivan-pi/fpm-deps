@@ -21,7 +21,7 @@ fpm-deps | dot -Tsvg -ofpmdeps.svg
 ```
 resulting in
 
-![fpmdeps package dependency graph](./fpmdeps.svg)
+![fpmdeps package dependency graph](./fpm-deps.svg)
 
 ## Mermaid
 
