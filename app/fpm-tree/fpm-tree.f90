@@ -18,7 +18,7 @@ logical, allocatable :: mask(:), ex(:), tmp(:)
 type(package_properties), allocatable :: props(:)
 character(len=:), allocatable :: manifest_path
 
-integer :: cmd_depth
+integer :: cmd_depth, cmd_prefix
 logical :: cmd_deduplicate, cmd_utf8
 
 integer :: debug_unit, nargs, blen, k
@@ -33,37 +33,68 @@ name = buf(1:blen)
 ! Default settings
 cmd_depth = -1
 cmd_deduplicate = .true.
-
 cmd_utf8 = .true.
+
+cmd_prefix = 0   ! 0 - indent, 1 - depth, 2 - none
+
 
 ! Process command-line arguments
 k = 1
 do while (k <= nargs)
 
     call get_command_argument(k,buf,length=blen)
+!    print *, "parsing ", k, ", buf = ", trim(buf)
 
-    parse_arg: select case(buf(1:blen))
+    parse_arg: select case(trim(buf))
     case('--version')
         write(output_unit,'(A)') version_str
         stop
     case('-h','--help')
         call show_help
         stop 0
-    case('-d','--depth')
+    case('--depth')
         k = k + 1
         call get_command_argument(k,buf,length=blen)
         read(buf,*) cmd_depth
         write(debug_unit,'(A,I0)') "cmd_depth = ", cmd_depth
     case('--no-dedupe')
         cmd_deduplicate = .false.
-!    case('--charset')
-!    case('--prefix')
-!    case('--flat')
+!    case('-e','--edges')
+    case('--charset')
+        k = k + 1
+        call get_command_argument(k,buf,length=blen)
+        select case(trim(buf))
+        case('utf8')
+            cmd_utf8 = .true.
+        case('ascii')
+            cmd_utf8 = .false.
+        case default
+            write(error_unit,'(A)') name//": error: invalid option for --format. Accepted values include 'utf8' and 'ascii'"
+            stop 1
+        end select
+    case('--prefix')
+        k = k + 1
+        call get_command_argument(k,buf,length=blen)
+        select case(trim(buf))
+        case('indent')
+            cmd_prefix = 0
+        case('depth')
+            cmd_prefix = 1
+        case('none')
+            cmd_prefix = 2
+        case default
+            write(error_unit,'(A)') name//": error: invalid option for --prefix. Accepted values include 'indent', 'depth', and 'none'."
+            stop 1
+        end select
+    case('--flat')
+        ! This is a shortcut for --prefix none
+        cmd_prefix = 2
     case default
         write(error_unit,'(A)') name//": error: invalid option -- "//buf(1:blen)
         write(error_unit,'(A)') "Try '"//name//" --help' for more information."
         stop 1
     end select parse_arg
+    k = k + 1
 
 end do
 
