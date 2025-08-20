@@ -57,6 +57,9 @@ do while (k <= nargs)
         call get_command_argument(k,buf)
         outfile = trim(buf)
         write(debug_unit,'(A)') "outfile = "//outfile
+! FIXME: introduce directory flag
+!    case('-d','--dir')
+!
     case('--manifest-path')
         k = k + 1
         call get_command_argument(k,buf)
@@ -67,7 +70,7 @@ do while (k <= nargs)
         call get_command_argument(k,buf)
         read(buf,*) cmd_dpi
         write(debug_unit,'(A)') "cmd_dpi = ", cmd_dpi
-    case('-d','--depth')
+    case('--depth')
         k = k + 1
         call get_command_argument(k,buf)
         read(buf,*) cmd_depth
@@ -108,7 +111,7 @@ do while (k <= nargs)
         end select
     case('--filter')
         write(error_unit,'(A)') "warning: --filter will be ignored"
-    case('--exclude')
+    case('-x','--exclude')
 ! FIXME: not very robust currently, the excluded packages should
 !        be quoted to become one string.
         k = k + 1
@@ -262,10 +265,10 @@ contains
     prefix = repeat(' ',len("Usage: "//name))
 
     write(output_unit,'(*(A,/))') &
-"Create a fpm project dependency graph in DOT language", &
+"Create a fpm project dependency graph", &
 "", &
 "Usage: "//name//" [-h] [--version] [-o OUTPUT] [--manifest_path PATH]", &
-prefix//" [--depth DEPTH] [--exclude <LIST>]", &
+prefix//" [--exclude <LIST>] [--depth DEPTH]", &
 prefix//" [--mermaid [{md|html}]] [--dpi DPI] [--no-url] [--no-tooltip]", &
 prefix//" [--rankdir {TB,BT,LR,RL}]", &
 "", &
@@ -276,13 +279,13 @@ prefix//" [--rankdir {TB,BT,LR,RL}]", &
 "     --manifest-path <PATH>", &
 "                       path to a valid fpm toml file; by default we look", &
 "                       in the current directory", &
-" -d, --depth <DEPTH>       dependency depth to consider during output; if negative", &
-"                       show the full dependency tree. use --depth 1 to show the", &
-"                       direct dependencies", &
 !" -a, --all         show all dependencies, including app, test, and examples", &
 !" --no-meta         ignore meta-dependencies in dependency graph", &
-"     --exclude <LIST>  a comma-separated list of packages to be excluded from the graph. use", &
+" -x, --exclude <LIST>  a comma-separated list of packages to be excluded from the graph. use", &
 "                       of quotes is necessary for correct parsing", &
+"     --depth <DEPTH>       dependency depth to consider during output; if negative", &
+"                       show the full dependency tree. use --depth 1 to show the", &
+"                       direct dependencies", &
 " -M, --mermaid [<FORMAT>]", &
 "                       output graph using Mermaid flowchart syntax suitable for",&
 "                       includion in markdown (md) documents; if html is selected",&
@@ -294,8 +297,8 @@ prefix//" [--rankdir {TB,BT,LR,RL}]", &
 "     --rankdir <RANKDIR>", &
 "                       direction of the graph layout: TB, BT, LR, RL [default: TB]", &
 "", &
-"By default output is written to standard output and can be processed", &
-"using the dot command. Example:", &
+"By default the graph is written in DOT language, directly to standard output.", &
+"Output can be post-processed using the dot command, for instance:", &
 "", &
 "   > fpmdeps --dpi 96 | dot -Tpng -ograph.png ", &
 "   > fpmdeps -o graph.gv", &
