@@ -3,32 +3,37 @@
 ASCIIDOCTOR = asciidoctor
 HTMLDIR = ./html
 
+DOCDIR  = ./
+ADOCDIR = $(DOCDIR)/adoc
+
+
 .PHONY: all
-all: fpm-tree.1 fpm-deps.1
+all: html depgraph
 
-%.1 : %.adoc
+
+.PHONY: man
+man: fpm-tree.1 fpm-deps.1
+
+%.1 : $(ADOCDIR)/%.adoc
 	$(ASCIIDOCTOR) -b manpage $<
-
-fpm-tree.1: fpm-tree.adoc
-fpm-deps.1: fpm-deps.adoc
 
 
 .PHONY: html
-html: $(HTMLDIR)/index.html \
-	  $(HTMLDIR)/fpm-tree.html \
-	  $(HTMLDIR)/fpm-deps.html
+html: $(DOCDIR)/index.html \
+	  $(DOCDIR)/fpm-tree.html \
+	  $(DOCDIR)/fpm-deps.html
 
-$(HTMLDIR)/%.html: %.adoc
+$(DOCDIR)/%.html: $(ADOCDIR)/%.adoc
 	$(ASCIIDOCTOR) -o $@ $<
 
 
+.PHONY: depgraph
+depgraph: $(DOCDIR)/depgraph.html
 
-.PHONY: $(HTMLDIR)/depgraph.html
-	
-$(HTMLDIR)/depgraph.html:
+$(DOCDIR)/depgraph.html:
 	fpm run --target fpm-deps -- --mermaid html -o ./doc/$@
-
 
 .PHONY: clean
 clean:
-	$(RM) *.1 *.html
+	$(RM) *.1
+	$(RM) $(DOCDIR)/*.html
